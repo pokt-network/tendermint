@@ -1,5 +1,17 @@
 # Changelog
 
+## Pocket Network Fork
+_April, 2, 2020_
+
+### FEATURES:
+
+Pseudorandomness added in proposer selection to prevent Proposer DDOS attacks
+
+- Added computeAvgVotingPower() to types/validator_set.go
+- Added GetProposerRandomized(previousBlockHash []byte) *Validator to types/validator_set.go
+- Added get GetPreviousBlockHash() []byte to consensus/state.go
+- Removed cs.eventBus.PublishEventNewRound(cs.NewRoundEvent()) event emit from consensus/state.go
+- Removed proposer printing in the validator set string object in types/validator_set.go
 ## v0.32.9
 
 _January, 9, 2020_

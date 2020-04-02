@@ -851,7 +851,7 @@ func (cs *ConsensusState) enterNewRound(height int64, round int) {
 	cs.Votes.SetRound(round + 1) // also track next round (round+1) to allow round-skipping
 	cs.TriggeredTimeoutPrecommit = false
 
-	cs.eventBus.PublishEventNewRound(cs.NewRoundEvent())
+	//cs.eventBus.PublishEventNewRound(cs.NewRoundEvent())
 	cs.metrics.Rounds.Set(float64(round))
 
 	// Wait for txs to be available in the mempool
@@ -929,23 +929,15 @@ func (cs *ConsensusState) enterPropose(height int64, round int) {
 	logger.Debug("This node is a validator")
 
 	if cs.isProposer(address) {
-		logger.Info("enterPropose: Our turn to propose",
-			"proposer",
-			cs.Validators.GetProposer().Address,
-			"privValidator",
-			cs.privValidator)
+		logger.Info("enterPropose: Our turn to propose")
 		cs.decideProposal(height, round)
 	} else {
-		logger.Info("enterPropose: Not our turn to propose",
-			"proposer",
-			cs.Validators.GetProposer().Address,
-			"privValidator",
-			cs.privValidator)
+		logger.Info("enterPropose: Not our turn to propose")
 	}
 }
 
 func (cs *ConsensusState) isProposer(address []byte) bool {
-	return bytes.Equal(cs.Validators.GetProposer().Address, address)
+	return bytes.Equal(cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash()).Address, address)
 }
 
 func (cs *ConsensusState) defaultDecideProposal(height int64, round int) {
@@ -1532,7 +1524,7 @@ func (cs *ConsensusState) defaultSetProposal(proposal *types.Proposal) error {
 	}
 
 	// Verify signature
-	if !cs.Validators.GetProposer().PubKey.VerifyBytes(proposal.SignBytes(cs.state.ChainID), proposal.Signature) {
+	if !cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash()).PubKey.VerifyBytes(proposal.SignBytes(cs.state.ChainID), proposal.Signature) {
 		return ErrInvalidProposalSignature
 	}
 
@@ -1889,4 +1881,12 @@ func CompareHRS(h1 int64, r1 int, s1 cstypes.RoundStepType, h2 int64, r2 int, s2
 		return 1
 	}
 	return 0
+}
+
+// Pocket Network's function to get the previous block hash from the consensus state object
+func (cs *ConsensusState) GetPreviousBlockHash() []byte {
+	if cs.Height <= 2 {
+		return cs.Validators.Hash()
+	}
+	return cs.blockStore.LoadBlock(cs.blockStore.Height()).Hash()
 }

@@ -2,10 +2,12 @@ package types
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"math/big"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -158,6 +160,22 @@ func (vals *ValidatorSet) computeAvgProposerPriority() int64 {
 	panic(fmt.Sprintf("Cannot represent avg ProposerPriority as an int64 %v", avg))
 }
 
+// Should not be called on an empty validator set.
+func (vals *ValidatorSet) computeAvgVotingPower() int64 {
+	n := int64(len(vals.Validators))
+	sum := big.NewInt(0)
+	for _, val := range vals.Validators {
+		sum.Add(sum, big.NewInt(val.VotingPower))
+	}
+	avg := sum.Div(sum, big.NewInt(n))
+	if avg.IsInt64() {
+		return avg.Int64()
+	}
+
+	// This should never happen: each val.ProposerPriority is in bounds of int64.
+	panic(fmt.Sprintf("Cannot represent avg voting power as an int64 %v", avg))
+}
+
 // Compute the difference between the max and min ProposerPriority of that set.
 func computeMaxMinPriorityDiff(vals *ValidatorSet) int64 {
 	if vals.IsNilOrEmpty() {
@@ -304,6 +322,64 @@ func (vals *ValidatorSet) findProposer() *Validator {
 		}
 	}
 	return proposer
+}
+
+// Pocket Network's custom addition to tendermint selection
+func (vals *ValidatorSet) GetProposerRandomized(previousBlockHash []byte) *Validator {
+	if len(vals.Validators) == 0 {
+		return nil
+	}
+	if vals.Proposer != nil {
+		return vals.Proposer.Copy()
+	}
+	avgPower := vals.computeAvgVotingPower()
+	var adjacencyMatrix []int // an adjacency matrix to allow for fair proposer selection
+	for valIndex, val := range vals.Validators {
+		// append index VP times where VP is the voting power of the validator
+		proposingPower := val.VotingPower / avgPower
+		// give everyone atleast 1 ticket
+		if proposingPower == 0 {
+			proposingPower = 1
+		}
+		for j := int64(0); j < proposingPower; j++ {
+			adjacencyMatrix = append(adjacencyMatrix, valIndex)
+		}
+	}
+	// calculate the length of the adjacency matrix for a max index selection
+	maxIndex := int64(len(adjacencyMatrix))
+	// hash the bytes and take the first 15 characters of the string
+	hashPart := hex.EncodeToString(previousBlockHash)[:15]
+	var maxValue int64
+	var err error
+	var proposerIndex int
+	// for each hex character of the hash
+	for i := 15; i > 0; i-- {
+		// parse the integer from this point of the hex string onward
+		maxValue, err = strconv.ParseInt(hashPart[:i], 16, 64)
+		if err != nil {
+			panic("could not convert maxValue hash hex string into int64 in randomized proposer selection: " + err.Error())
+		}
+		// if the max index is greater than the resulting integer...
+		if maxIndex > maxValue {
+			// now that we have our max value, substring it to get our final selection
+			firstCharacter, err := strconv.ParseInt(string(hashPart[0]), 16, 64)
+			if err != nil {
+				panic("could not convert first character hex string into int64 in randomized proposer selection: " + err.Error())
+			}
+			// the selection will always be <= i (the max value index)
+			selection := firstCharacter%int64(i) + 1
+			// parse the integer from the beginning to the selection point
+			index, err := strconv.ParseInt(hashPart[:selection], 16, 64)
+			if err != nil {
+				panic("could not convert the final index hex string into int64 in randomized proposer selection: " + err.Error())
+			}
+			proposerIndex = adjacencyMatrix[index]
+			break
+		}
+	}
+	proposer := vals.Validators[proposerIndex]
+	vals.Proposer = proposer
+	return proposer.Copy()
 }
 
 // Hash returns the Merkle root hash build using validators (as leaves) in the
@@ -756,11 +832,9 @@ func (vals *ValidatorSet) StringIndented(indent string) string {
 		return false
 	})
 	return fmt.Sprintf(`ValidatorSet{
-%s  Proposer: %v
 %s  Validators:
 %s    %v
 %s}`,
-		indent, vals.GetProposer().String(),
 		indent,
 		indent, strings.Join(valStrings, "\n"+indent+"    "),
 		indent)
