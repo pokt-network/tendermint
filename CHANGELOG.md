@@ -1,6 +1,12 @@
 # Changelog
 
 ## Pocket Network Fork
+_April, 16, 2020_
+### FEATURES:
+
+Backported Fixes on Version 0.32.10
+
+
 _April, 2, 2020_
 
 ### FEATURES:
