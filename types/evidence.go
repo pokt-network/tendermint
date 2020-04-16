@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/tendermint/tendermint/crypto/tmhash"
+	"github.com/pokt-network/tendermint/crypto/tmhash"
 
 	amino "github.com/tendermint/go-amino"
 
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/merkle"
+	"github.com/pokt-network/tendermint/crypto"
+	"github.com/pokt-network/tendermint/crypto/merkle"
 )
 
 const (

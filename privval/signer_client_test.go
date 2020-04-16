@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/types"
+	"github.com/pokt-network/tendermint/libs/common"
+	"github.com/pokt-network/tendermint/types"
 )
 
 type signerTestCase struct {

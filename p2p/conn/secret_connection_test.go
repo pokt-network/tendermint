@@ -14,12 +14,12 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/pokt-network/tendermint/crypto"
+	"github.com/pokt-network/tendermint/crypto/ed25519"
+	"github.com/pokt-network/tendermint/crypto/secp256k1"
+	cmn "github.com/pokt-network/tendermint/libs/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 type kvstoreConn struct {

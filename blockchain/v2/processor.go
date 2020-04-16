@@ -3,9 +3,9 @@ package v2
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/p2p"
-	tdState "github.com/tendermint/tendermint/state"
-	"github.com/tendermint/tendermint/types"
+	"github.com/pokt-network/tendermint/p2p"
+	tdState "github.com/pokt-network/tendermint/state"
+	"github.com/pokt-network/tendermint/types"
 )
 
 type peerError struct {

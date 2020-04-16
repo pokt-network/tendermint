@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
+	cmn "github.com/pokt-network/tendermint/libs/common"
+	"github.com/pokt-network/tendermint/p2p"
+	sm "github.com/pokt-network/tendermint/state"
+	"github.com/pokt-network/tendermint/types"
 	"github.com/stretchr/testify/require"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/p2p"
-	sm "github.com/tendermint/tendermint/state"
-	"github.com/tendermint/tendermint/types"
 )
 
 //----------------------------------------------

@@ -7,8 +7,8 @@ import (
 	"net"
 	"sync"
 
-	"github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/pokt-network/tendermint/abci/types"
+	cmn "github.com/pokt-network/tendermint/libs/common"
 )
 
 // var maxNumberConnections = 2

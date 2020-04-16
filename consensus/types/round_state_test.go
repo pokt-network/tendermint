@@ -3,11 +3,11 @@ package types
 import (
 	"testing"
 
+	"github.com/pokt-network/tendermint/crypto/ed25519"
+	cmn "github.com/pokt-network/tendermint/libs/common"
+	"github.com/pokt-network/tendermint/types"
+	tmtime "github.com/pokt-network/tendermint/types/time"
 	amino "github.com/tendermint/go-amino"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
 )
 
 func BenchmarkRoundStateDeepCopy(b *testing.B) {

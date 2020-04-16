@@ -1,12 +1,12 @@
 package lite
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/pokt-network/tendermint/crypto"
+	"github.com/pokt-network/tendermint/crypto/ed25519"
+	"github.com/pokt-network/tendermint/crypto/secp256k1"
 
-	"github.com/tendermint/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
+	"github.com/pokt-network/tendermint/types"
+	tmtime "github.com/pokt-network/tendermint/types/time"
 )
 
 // privKeys is a helper type for testing.

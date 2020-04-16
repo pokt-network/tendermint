@@ -3,13 +3,13 @@ package commands
 import (
 	"fmt"
 
+	cfg "github.com/pokt-network/tendermint/config"
+	cmn "github.com/pokt-network/tendermint/libs/common"
+	"github.com/pokt-network/tendermint/p2p"
+	"github.com/pokt-network/tendermint/privval"
+	"github.com/pokt-network/tendermint/types"
+	tmtime "github.com/pokt-network/tendermint/types/time"
 	"github.com/spf13/cobra"
-	cfg "github.com/tendermint/tendermint/config"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/p2p"
-	"github.com/tendermint/tendermint/privval"
-	"github.com/tendermint/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
 )
 
 // InitFilesCmd initialises a fresh Tendermint Core instance.

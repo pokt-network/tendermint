@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
+	cmn "github.com/pokt-network/tendermint/libs/common"
 )
 
 const (

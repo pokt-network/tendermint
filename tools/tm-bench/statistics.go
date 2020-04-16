@@ -8,9 +8,9 @@ import (
 	"text/tabwriter"
 	"time"
 
+	tmrpc "github.com/pokt-network/tendermint/rpc/client"
+	"github.com/pokt-network/tendermint/types"
 	metrics "github.com/rcrowley/go-metrics"
-	tmrpc "github.com/tendermint/tendermint/rpc/client"
-	"github.com/tendermint/tendermint/types"
 )
 
 type statistics struct {

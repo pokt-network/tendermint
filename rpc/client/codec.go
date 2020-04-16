@@ -1,8 +1,8 @@
 package client
 
 import (
+	"github.com/pokt-network/tendermint/types"
 	amino "github.com/tendermint/go-amino"
-	"github.com/tendermint/tendermint/types"
 )
 
 var cdc = amino.NewCodec()

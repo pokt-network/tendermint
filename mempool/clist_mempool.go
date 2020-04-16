@@ -11,15 +11,15 @@ import (
 
 	"github.com/pkg/errors"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	cfg "github.com/tendermint/tendermint/config"
-	auto "github.com/tendermint/tendermint/libs/autofile"
-	"github.com/tendermint/tendermint/libs/clist"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/p2p"
-	"github.com/tendermint/tendermint/proxy"
-	"github.com/tendermint/tendermint/types"
+	abci "github.com/pokt-network/tendermint/abci/types"
+	cfg "github.com/pokt-network/tendermint/config"
+	auto "github.com/pokt-network/tendermint/libs/autofile"
+	"github.com/pokt-network/tendermint/libs/clist"
+	cmn "github.com/pokt-network/tendermint/libs/common"
+	"github.com/pokt-network/tendermint/libs/log"
+	"github.com/pokt-network/tendermint/p2p"
+	"github.com/pokt-network/tendermint/proxy"
+	"github.com/pokt-network/tendermint/types"
 )
 
 //--------------------------------------------------------------------------------

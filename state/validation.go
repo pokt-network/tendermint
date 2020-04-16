@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/types"
+	"github.com/pokt-network/tendermint/crypto"
+	"github.com/pokt-network/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 )
 

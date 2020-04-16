@@ -3,8 +3,8 @@ package evidence
 import (
 	"testing"
 
+	"github.com/pokt-network/tendermint/types"
 	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 )
 

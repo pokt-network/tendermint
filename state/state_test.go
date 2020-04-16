@@ -8,16 +8,16 @@ import (
 	"os"
 	"testing"
 
+	abci "github.com/pokt-network/tendermint/abci/types"
+	"github.com/pokt-network/tendermint/crypto/ed25519"
+	cmn "github.com/pokt-network/tendermint/libs/common"
+	sm "github.com/pokt-network/tendermint/state"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	sm "github.com/tendermint/tendermint/state"
 	dbm "github.com/tendermint/tm-db"
 
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/types"
+	cfg "github.com/pokt-network/tendermint/config"
+	"github.com/pokt-network/tendermint/types"
 )
 
 // setupTestCase does setup common to all test cases.

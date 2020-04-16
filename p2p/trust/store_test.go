@@ -9,8 +9,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pokt-network/tendermint/libs/log"
 	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 )
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/tendermint/tendermint/crypto/tmhash"
+	"github.com/pokt-network/tendermint/crypto/tmhash"
 )
 
 const (
