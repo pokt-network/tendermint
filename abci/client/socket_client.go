@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pokt-network/tendermint/abci/types"
-	cmn "github.com/pokt-network/tendermint/libs/common"
+	"github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 const reqQueueSize = 256 // TODO make configurable

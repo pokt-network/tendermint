@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/pokt-network/tendermint/p2p"
+	"github.com/tendermint/tendermint/p2p"
 )
 
 // Reporter provides an interface for reactors to report the behaviour

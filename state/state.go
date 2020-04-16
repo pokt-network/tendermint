@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/pokt-network/tendermint/types"
-	tmtime "github.com/pokt-network/tendermint/types/time"
-	"github.com/pokt-network/tendermint/version"
+	"github.com/tendermint/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
+	"github.com/tendermint/tendermint/version"
 )
 
 // database keys

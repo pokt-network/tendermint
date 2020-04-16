@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pokt-network/tendermint/config"
-	cmn "github.com/pokt-network/tendermint/libs/common"
+	"github.com/tendermint/tendermint/config"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 // FuzzedConnection wraps any net.Conn and depending on the mode either delays

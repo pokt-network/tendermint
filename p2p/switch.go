@@ -8,9 +8,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pokt-network/tendermint/config"
-	cmn "github.com/pokt-network/tendermint/libs/common"
-	"github.com/pokt-network/tendermint/p2p/conn"
+	"github.com/tendermint/tendermint/config"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/p2p/conn"
 )
 
 const (

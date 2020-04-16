@@ -1,9 +1,9 @@
 package core
 
 import (
-	ctypes "github.com/pokt-network/tendermint/rpc/core/types"
-	rpctypes "github.com/pokt-network/tendermint/rpc/lib/types"
-	"github.com/pokt-network/tendermint/types"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	rpctypes "github.com/tendermint/tendermint/rpc/lib/types"
+	"github.com/tendermint/tendermint/types"
 )
 
 // BroadcastEvidence broadcasts evidence of the misbehavior.

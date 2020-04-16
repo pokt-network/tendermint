@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/pokt-network/tendermint/libs/log"
-	tmtypes "github.com/pokt-network/tendermint/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // waiting more than this many seconds for a block means we're unhealthy

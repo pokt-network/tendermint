@@ -7,10 +7,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	cfg "github.com/pokt-network/tendermint/config"
-	"github.com/pokt-network/tendermint/libs/cli"
-	tmflags "github.com/pokt-network/tendermint/libs/cli/flags"
-	"github.com/pokt-network/tendermint/libs/log"
+	cfg "github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/libs/cli"
+	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 var (

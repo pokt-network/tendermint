@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/pokt-network/tendermint/libs/log"
-	lerr "github.com/pokt-network/tendermint/lite/errors"
-	"github.com/pokt-network/tendermint/types"
+	log "github.com/tendermint/tendermint/libs/log"
+	lerr "github.com/tendermint/tendermint/lite/errors"
+	"github.com/tendermint/tendermint/types"
 )
 
 const sizeOfPendingMap = 1024

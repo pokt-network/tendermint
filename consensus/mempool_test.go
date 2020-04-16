@@ -9,11 +9,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pokt-network/tendermint/abci/example/code"
-	abci "github.com/pokt-network/tendermint/abci/types"
-	mempl "github.com/pokt-network/tendermint/mempool"
-	sm "github.com/pokt-network/tendermint/state"
-	"github.com/pokt-network/tendermint/types"
+	"github.com/tendermint/tendermint/abci/example/code"
+	abci "github.com/tendermint/tendermint/abci/types"
+	mempl "github.com/tendermint/tendermint/mempool"
+	sm "github.com/tendermint/tendermint/state"
+	"github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 )
 

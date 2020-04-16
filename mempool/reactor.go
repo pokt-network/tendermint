@@ -9,11 +9,11 @@ import (
 
 	amino "github.com/tendermint/go-amino"
 
-	cfg "github.com/pokt-network/tendermint/config"
-	"github.com/pokt-network/tendermint/libs/clist"
-	"github.com/pokt-network/tendermint/libs/log"
-	"github.com/pokt-network/tendermint/p2p"
-	"github.com/pokt-network/tendermint/types"
+	cfg "github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/libs/clist"
+	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/types"
 )
 
 const (

@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pokt-network/tendermint/abci/example/code"
-	"github.com/pokt-network/tendermint/abci/types"
-	cmn "github.com/pokt-network/tendermint/libs/common"
-	"github.com/pokt-network/tendermint/version"
+	"github.com/tendermint/tendermint/abci/example/code"
+	"github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/version"
 	dbm "github.com/tendermint/tm-db"
 )
 

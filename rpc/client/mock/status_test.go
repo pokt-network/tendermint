@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	cmn "github.com/pokt-network/tendermint/libs/common"
-	"github.com/pokt-network/tendermint/rpc/client/mock"
-	ctypes "github.com/pokt-network/tendermint/rpc/core/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/rpc/client/mock"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 func TestStatus(t *testing.T) {

@@ -1,7 +1,7 @@
 package p2p
 
 import (
-	"github.com/pokt-network/tendermint/p2p/conn"
+	"github.com/tendermint/tendermint/p2p/conn"
 )
 
 type ChannelDescriptor = conn.ChannelDescriptor

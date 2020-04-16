@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	cmn "github.com/pokt-network/tendermint/libs/common"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 // DefaultDirPerm is the default permissions used when creating directories.

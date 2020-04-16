@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/pokt-network/tendermint/crypto/ed25519"
-	cmn "github.com/pokt-network/tendermint/libs/common"
-	"github.com/pokt-network/tendermint/libs/log"
-	"github.com/pokt-network/tendermint/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/types"
 )
 
 var (

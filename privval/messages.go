@@ -1,9 +1,9 @@
 package privval
 
 import (
-	"github.com/pokt-network/tendermint/crypto"
-	"github.com/pokt-network/tendermint/types"
 	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/types"
 )
 
 // SignerMessage is sent between Signer Clients and Servers.

@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pokt-network/tendermint/privval"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/privval"
 )
 
 const lastSignBytes = "750802110500000000000000220B08B398F3E00510F48DA6402A480A20FC25" +

@@ -15,10 +15,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	cmn "github.com/pokt-network/tendermint/libs/common"
-	flow "github.com/pokt-network/tendermint/libs/flowrate"
-	"github.com/pokt-network/tendermint/libs/log"
 	amino "github.com/tendermint/go-amino"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	flow "github.com/tendermint/tendermint/libs/flowrate"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 const (

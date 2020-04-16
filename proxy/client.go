@@ -5,10 +5,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	abcicli "github.com/pokt-network/tendermint/abci/client"
-	"github.com/pokt-network/tendermint/abci/example/counter"
-	"github.com/pokt-network/tendermint/abci/example/kvstore"
-	"github.com/pokt-network/tendermint/abci/types"
+	abcicli "github.com/tendermint/tendermint/abci/client"
+	"github.com/tendermint/tendermint/abci/example/counter"
+	"github.com/tendermint/tendermint/abci/example/kvstore"
+	"github.com/tendermint/tendermint/abci/types"
 )
 
 // NewABCIClient returns newly connected client

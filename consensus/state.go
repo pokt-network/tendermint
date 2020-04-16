@@ -10,17 +10,17 @@ import (
 
 	"github.com/pkg/errors"
 
-	cmn "github.com/pokt-network/tendermint/libs/common"
-	"github.com/pokt-network/tendermint/libs/fail"
-	"github.com/pokt-network/tendermint/libs/log"
-	tmtime "github.com/pokt-network/tendermint/types/time"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/libs/fail"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
-	cfg "github.com/pokt-network/tendermint/config"
-	cstypes "github.com/pokt-network/tendermint/consensus/types"
-	tmevents "github.com/pokt-network/tendermint/libs/events"
-	"github.com/pokt-network/tendermint/p2p"
-	sm "github.com/pokt-network/tendermint/state"
-	"github.com/pokt-network/tendermint/types"
+	cfg "github.com/tendermint/tendermint/config"
+	cstypes "github.com/tendermint/tendermint/consensus/types"
+	tmevents "github.com/tendermint/tendermint/libs/events"
+	"github.com/tendermint/tendermint/p2p"
+	sm "github.com/tendermint/tendermint/state"
+	"github.com/tendermint/tendermint/types"
 )
 
 //-----------------------------------------------------------------------------

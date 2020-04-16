@@ -8,11 +8,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/pokt-network/tendermint/abci/types"
-	cmn "github.com/pokt-network/tendermint/libs/common"
-	"github.com/pokt-network/tendermint/rpc/client"
-	ctypes "github.com/pokt-network/tendermint/rpc/core/types"
-	"github.com/pokt-network/tendermint/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/rpc/client"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/types"
 )
 
 var waitForEventTimeout = 5 * time.Second

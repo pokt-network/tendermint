@@ -14,12 +14,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/pokt-network/tendermint/crypto"
-	"github.com/pokt-network/tendermint/crypto/merkle"
-	"github.com/pokt-network/tendermint/crypto/tmhash"
-	cmn "github.com/pokt-network/tendermint/libs/common"
-	tmtime "github.com/pokt-network/tendermint/types/time"
-	"github.com/pokt-network/tendermint/version"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/merkle"
+	"github.com/tendermint/tendermint/crypto/tmhash"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	tmtime "github.com/tendermint/tendermint/types/time"
+	"github.com/tendermint/tendermint/version"
 )
 
 func TestMain(m *testing.M) {

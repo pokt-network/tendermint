@@ -7,11 +7,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	abci "github.com/pokt-network/tendermint/abci/types"
-	mempl "github.com/pokt-network/tendermint/mempool"
-	ctypes "github.com/pokt-network/tendermint/rpc/core/types"
-	rpctypes "github.com/pokt-network/tendermint/rpc/lib/types"
-	"github.com/pokt-network/tendermint/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	mempl "github.com/tendermint/tendermint/mempool"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	rpctypes "github.com/tendermint/tendermint/rpc/lib/types"
+	"github.com/tendermint/tendermint/types"
 )
 
 //-----------------------------------------------------------------------------

@@ -17,15 +17,15 @@ import (
 
 	amino "github.com/tendermint/go-amino"
 
-	"github.com/pokt-network/tendermint/abci/example/counter"
-	"github.com/pokt-network/tendermint/abci/example/kvstore"
-	abciserver "github.com/pokt-network/tendermint/abci/server"
-	abci "github.com/pokt-network/tendermint/abci/types"
-	cfg "github.com/pokt-network/tendermint/config"
-	cmn "github.com/pokt-network/tendermint/libs/common"
-	"github.com/pokt-network/tendermint/libs/log"
-	"github.com/pokt-network/tendermint/proxy"
-	"github.com/pokt-network/tendermint/types"
+	"github.com/tendermint/tendermint/abci/example/counter"
+	"github.com/tendermint/tendermint/abci/example/kvstore"
+	abciserver "github.com/tendermint/tendermint/abci/server"
+	abci "github.com/tendermint/tendermint/abci/types"
+	cfg "github.com/tendermint/tendermint/config"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/proxy"
+	"github.com/tendermint/tendermint/types"
 )
 
 // A cleanupFunc cleans up any config / test files created for a particular
