@@ -9,8 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/netutil"
 
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/p2p/conn"
+	"github.com/pokt-network/tendermint/crypto"
+	"github.com/pokt-network/tendermint/p2p/conn"
 )
 
 const (

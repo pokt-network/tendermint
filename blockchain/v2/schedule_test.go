@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pokt-network/tendermint/p2p"
 	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/tendermint/p2p"
 )
 
 func TestScheduleInit(t *testing.T) {

@@ -11,11 +11,11 @@ import (
 
 	db "github.com/tendermint/tm-db"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/libs/pubsub/query"
-	"github.com/tendermint/tendermint/state/txindex"
-	"github.com/tendermint/tendermint/types"
+	abci "github.com/pokt-network/tendermint/abci/types"
+	cmn "github.com/pokt-network/tendermint/libs/common"
+	"github.com/pokt-network/tendermint/libs/pubsub/query"
+	"github.com/pokt-network/tendermint/state/txindex"
+	"github.com/pokt-network/tendermint/types"
 )
 
 func TestTxIndex(t *testing.T) {

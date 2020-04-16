@@ -11,16 +11,16 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/tendermint/tendermint/abci/example/kvstore"
-	cfg "github.com/tendermint/tendermint/config"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/mock"
-	"github.com/tendermint/tendermint/privval"
-	"github.com/tendermint/tendermint/proxy"
-	sm "github.com/tendermint/tendermint/state"
-	"github.com/tendermint/tendermint/store"
-	"github.com/tendermint/tendermint/types"
+	"github.com/pokt-network/tendermint/abci/example/kvstore"
+	cfg "github.com/pokt-network/tendermint/config"
+	cmn "github.com/pokt-network/tendermint/libs/common"
+	"github.com/pokt-network/tendermint/libs/log"
+	"github.com/pokt-network/tendermint/mock"
+	"github.com/pokt-network/tendermint/privval"
+	"github.com/pokt-network/tendermint/proxy"
+	sm "github.com/pokt-network/tendermint/state"
+	"github.com/pokt-network/tendermint/store"
+	"github.com/pokt-network/tendermint/types"
 	db "github.com/tendermint/tm-db"
 )
 

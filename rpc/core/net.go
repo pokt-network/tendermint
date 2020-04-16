@@ -5,9 +5,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/tendermint/tendermint/p2p"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	rpctypes "github.com/tendermint/tendermint/rpc/lib/types"
+	"github.com/pokt-network/tendermint/p2p"
+	ctypes "github.com/pokt-network/tendermint/rpc/core/types"
+	rpctypes "github.com/pokt-network/tendermint/rpc/lib/types"
 )
 
 // NetInfo returns network info.

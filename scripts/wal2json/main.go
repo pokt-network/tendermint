@@ -12,9 +12,9 @@ import (
 	"io"
 	"os"
 
+	cs "github.com/pokt-network/tendermint/consensus"
+	"github.com/pokt-network/tendermint/types"
 	amino "github.com/tendermint/go-amino"
-	cs "github.com/tendermint/tendermint/consensus"
-	"github.com/tendermint/tendermint/types"
 )
 
 var cdc = amino.NewCodec()

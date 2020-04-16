@@ -6,15 +6,15 @@ import (
 
 	"github.com/pkg/errors"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/libs/log"
-	tmpubsub "github.com/tendermint/tendermint/libs/pubsub"
-	tmquery "github.com/tendermint/tendermint/libs/pubsub/query"
-	nm "github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/rpc/core"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	rpctypes "github.com/tendermint/tendermint/rpc/lib/types"
-	"github.com/tendermint/tendermint/types"
+	cmn "github.com/pokt-network/tendermint/libs/common"
+	"github.com/pokt-network/tendermint/libs/log"
+	tmpubsub "github.com/pokt-network/tendermint/libs/pubsub"
+	tmquery "github.com/pokt-network/tendermint/libs/pubsub/query"
+	nm "github.com/pokt-network/tendermint/node"
+	"github.com/pokt-network/tendermint/rpc/core"
+	ctypes "github.com/pokt-network/tendermint/rpc/core/types"
+	rpctypes "github.com/pokt-network/tendermint/rpc/lib/types"
+	"github.com/pokt-network/tendermint/types"
 )
 
 /*

@@ -6,13 +6,13 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/pokt-network/tendermint/behaviour"
+	"github.com/pokt-network/tendermint/libs/log"
+	"github.com/pokt-network/tendermint/p2p"
+	sm "github.com/pokt-network/tendermint/state"
+	"github.com/pokt-network/tendermint/store"
+	"github.com/pokt-network/tendermint/types"
 	amino "github.com/tendermint/go-amino"
-	"github.com/tendermint/tendermint/behaviour"
-	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/p2p"
-	sm "github.com/tendermint/tendermint/state"
-	"github.com/tendermint/tendermint/store"
-	"github.com/tendermint/tendermint/types"
 )
 
 const (

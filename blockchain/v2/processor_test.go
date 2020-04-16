@@ -3,10 +3,10 @@ package v2
 import (
 	"testing"
 
+	"github.com/pokt-network/tendermint/p2p"
+	tdState "github.com/pokt-network/tendermint/state"
+	"github.com/pokt-network/tendermint/types"
 	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/tendermint/p2p"
-	tdState "github.com/tendermint/tendermint/state"
-	"github.com/tendermint/tendermint/types"
 )
 
 // pcBlock is a test helper structure with simple types. Its purpose is to help with test readability.

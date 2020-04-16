@@ -17,10 +17,10 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 
+	cmn "github.com/pokt-network/tendermint/libs/common"
+	"github.com/pokt-network/tendermint/libs/log"
+	types "github.com/pokt-network/tendermint/rpc/lib/types"
 	amino "github.com/tendermint/go-amino"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/libs/log"
-	types "github.com/tendermint/tendermint/rpc/lib/types"
 )
 
 // RegisterRPCFuncs adds a route for each function in the funcMap,

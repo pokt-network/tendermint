@@ -3,11 +3,11 @@ package core
 import (
 	"fmt"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	rpctypes "github.com/tendermint/tendermint/rpc/lib/types"
-	sm "github.com/tendermint/tendermint/state"
-	"github.com/tendermint/tendermint/types"
+	cmn "github.com/pokt-network/tendermint/libs/common"
+	ctypes "github.com/pokt-network/tendermint/rpc/core/types"
+	rpctypes "github.com/pokt-network/tendermint/rpc/lib/types"
+	sm "github.com/pokt-network/tendermint/state"
+	"github.com/pokt-network/tendermint/types"
 )
 
 // BlockchainInfo gets block headers for minHeight <= height <= maxHeight.
