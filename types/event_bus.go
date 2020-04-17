@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pokt-network/tendermint/abci/types"
-	cmn "github.com/pokt-network/tendermint/libs/common"
-	"github.com/pokt-network/tendermint/libs/log"
-	tmpubsub "github.com/pokt-network/tendermint/libs/pubsub"
+	"github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/libs/log"
+	tmpubsub "github.com/tendermint/tendermint/libs/pubsub"
 )
 
 const defaultCapacity = 0

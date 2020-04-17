@@ -1,8 +1,8 @@
 package state
 
 import (
-	abci "github.com/pokt-network/tendermint/abci/types"
-	"github.com/pokt-network/tendermint/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 )
 

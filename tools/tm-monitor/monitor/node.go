@@ -7,13 +7,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pokt-network/tendermint/crypto"
-	"github.com/pokt-network/tendermint/libs/events"
-	"github.com/pokt-network/tendermint/libs/log"
-	ctypes "github.com/pokt-network/tendermint/rpc/core/types"
-	rpc_client "github.com/pokt-network/tendermint/rpc/lib/client"
-	em "github.com/pokt-network/tendermint/tools/tm-monitor/eventmeter"
-	tmtypes "github.com/pokt-network/tendermint/types"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/libs/events"
+	"github.com/tendermint/tendermint/libs/log"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	rpc_client "github.com/tendermint/tendermint/rpc/lib/client"
+	em "github.com/tendermint/tendermint/tools/tm-monitor/eventmeter"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const maxRestarts = 25

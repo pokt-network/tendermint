@@ -5,11 +5,11 @@ import (
 	"regexp"
 	"strconv"
 
-	cryptoAmino "github.com/pokt-network/tendermint/crypto/encoding/amino"
-	log "github.com/pokt-network/tendermint/libs/log"
-	lerr "github.com/pokt-network/tendermint/lite/errors"
-	"github.com/pokt-network/tendermint/types"
 	amino "github.com/tendermint/go-amino"
+	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
+	log "github.com/tendermint/tendermint/libs/log"
+	lerr "github.com/tendermint/tendermint/lite/errors"
+	"github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 )
 

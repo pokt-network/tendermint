@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/pokt-network/tendermint/libs/log"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
 
-	types "github.com/pokt-network/tendermint/rpc/lib/types"
+	types "github.com/tendermint/tendermint/rpc/lib/types"
 )
 
 var wsCallTimeout = 5 * time.Second

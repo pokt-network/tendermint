@@ -4,11 +4,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pokt-network/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/libs/cli"
 
-	cmd "github.com/pokt-network/tendermint/cmd/tendermint/commands"
-	cfg "github.com/pokt-network/tendermint/config"
-	nm "github.com/pokt-network/tendermint/node"
+	cmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	cfg "github.com/tendermint/tendermint/config"
+	nm "github.com/tendermint/tendermint/node"
 )
 
 func main() {

@@ -6,10 +6,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	tmpubsub "github.com/pokt-network/tendermint/libs/pubsub"
-	tmquery "github.com/pokt-network/tendermint/libs/pubsub/query"
-	ctypes "github.com/pokt-network/tendermint/rpc/core/types"
-	rpctypes "github.com/pokt-network/tendermint/rpc/lib/types"
+	tmpubsub "github.com/tendermint/tendermint/libs/pubsub"
+	tmquery "github.com/tendermint/tendermint/libs/pubsub/query"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	rpctypes "github.com/tendermint/tendermint/rpc/lib/types"
 )
 
 // Subscribe for events via WebSocket.

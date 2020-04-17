@@ -8,18 +8,18 @@ import (
 	"strings"
 	"time"
 
-	abci "github.com/pokt-network/tendermint/abci/types"
-	"github.com/pokt-network/tendermint/libs/log"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 
-	cfg "github.com/pokt-network/tendermint/config"
-	cmn "github.com/pokt-network/tendermint/libs/common"
-	nm "github.com/pokt-network/tendermint/node"
-	"github.com/pokt-network/tendermint/p2p"
-	"github.com/pokt-network/tendermint/privval"
-	"github.com/pokt-network/tendermint/proxy"
-	ctypes "github.com/pokt-network/tendermint/rpc/core/types"
-	core_grpc "github.com/pokt-network/tendermint/rpc/grpc"
-	rpcclient "github.com/pokt-network/tendermint/rpc/lib/client"
+	cfg "github.com/tendermint/tendermint/config"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	nm "github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/proxy"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	core_grpc "github.com/tendermint/tendermint/rpc/grpc"
+	rpcclient "github.com/tendermint/tendermint/rpc/lib/client"
 )
 
 // Options helps with specifying some parameters for our RPC testing for greater

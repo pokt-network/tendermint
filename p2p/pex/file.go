@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	cmn "github.com/pokt-network/tendermint/libs/common"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 /* Loading & Saving */

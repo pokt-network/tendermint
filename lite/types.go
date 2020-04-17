@@ -1,7 +1,7 @@
 package lite
 
 import (
-	"github.com/pokt-network/tendermint/types"
+	"github.com/tendermint/tendermint/types"
 )
 
 // Verifier checks the votes to make sure the block really is signed properly.

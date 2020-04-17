@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pokt-network/tendermint/libs/log"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 const (

@@ -1,8 +1,8 @@
 package core
 
 import (
-	ctypes "github.com/pokt-network/tendermint/rpc/core/types"
-	rpctypes "github.com/pokt-network/tendermint/rpc/lib/types"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	rpctypes "github.com/tendermint/tendermint/rpc/lib/types"
 )
 
 // Health gets node health. Returns empty result (200 OK) on success, no

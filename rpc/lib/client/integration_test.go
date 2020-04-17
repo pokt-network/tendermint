@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/tendermint/libs/log"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 func TestWSClientReconnectWithJitter(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/pokt-network/tendermint/p2p"
+	"github.com/tendermint/tendermint/p2p"
 )
 
 type blockState int

@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/tendermint/crypto/ed25519"
-	"github.com/pokt-network/tendermint/types"
-	tmtime "github.com/pokt-network/tendermint/types/time"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 )
 
 func TestGenLoadValidator(t *testing.T) {

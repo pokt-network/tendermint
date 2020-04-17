@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/pokt-network/tendermint/config"
-	"github.com/pokt-network/tendermint/libs/log"
-	"github.com/pokt-network/tendermint/p2p"
-	"github.com/pokt-network/tendermint/p2p/mock"
+	"github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/p2p/mock"
 )
 
 var (

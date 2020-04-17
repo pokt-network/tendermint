@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"time"
 
-	abci "github.com/pokt-network/tendermint/abci/types"
-	"github.com/pokt-network/tendermint/crypto"
-	cmn "github.com/pokt-network/tendermint/libs/common"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
+	cmn "github.com/tendermint/tendermint/libs/common"
 
-	"github.com/pokt-network/tendermint/p2p"
-	"github.com/pokt-network/tendermint/state"
-	"github.com/pokt-network/tendermint/types"
+	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/state"
+	"github.com/tendermint/tendermint/types"
 )
 
 // List of blocks

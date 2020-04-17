@@ -4,15 +4,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/tendermint/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/mock"
 
-	"github.com/pokt-network/tendermint/crypto/ed25519"
-	"github.com/pokt-network/tendermint/crypto/tmhash"
-	"github.com/pokt-network/tendermint/libs/log"
-	sm "github.com/pokt-network/tendermint/state"
-	"github.com/pokt-network/tendermint/types"
-	tmtime "github.com/pokt-network/tendermint/types/time"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/tmhash"
+	"github.com/tendermint/tendermint/libs/log"
+	sm "github.com/tendermint/tendermint/state"
+	"github.com/tendermint/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 )
 
 const validationTestsStopHeight int64 = 10

@@ -3,9 +3,9 @@ package v2
 import (
 	"fmt"
 
-	"github.com/pokt-network/tendermint/state"
-	"github.com/pokt-network/tendermint/store"
-	"github.com/pokt-network/tendermint/types"
+	"github.com/tendermint/tendermint/state"
+	"github.com/tendermint/tendermint/store"
+	"github.com/tendermint/tendermint/types"
 )
 
 type processorContext interface {

@@ -8,15 +8,15 @@ import (
 
 	"github.com/pkg/errors"
 
-	cstypes "github.com/pokt-network/tendermint/consensus/types"
-	cmn "github.com/pokt-network/tendermint/libs/common"
-	tmevents "github.com/pokt-network/tendermint/libs/events"
-	"github.com/pokt-network/tendermint/libs/log"
-	"github.com/pokt-network/tendermint/p2p"
-	sm "github.com/pokt-network/tendermint/state"
-	"github.com/pokt-network/tendermint/types"
-	tmtime "github.com/pokt-network/tendermint/types/time"
 	amino "github.com/tendermint/go-amino"
+	cstypes "github.com/tendermint/tendermint/consensus/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	tmevents "github.com/tendermint/tendermint/libs/events"
+	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/p2p"
+	sm "github.com/tendermint/tendermint/state"
+	"github.com/tendermint/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 )
 
 const (
