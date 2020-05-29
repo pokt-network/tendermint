@@ -328,7 +328,7 @@ func (vals *ValidatorSet) findProposer() *Validator {
 
 // Pocket Network's custom addition to tendermint selection
 func (vals *ValidatorSet) GetProposerRandomized(previousBlockHash []byte, round uint64) *Validator {
-	var roundBz []byte
+	roundBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(roundBz, round)
 	previousBlockHash = tmhash.Sum(append(previousBlockHash, roundBz...))
 	if len(vals.Validators) == 0 {
