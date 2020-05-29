@@ -18,6 +18,7 @@ Pseudorandomness added in proposer selection to prevent Proposer DDOS attacks
 - Added get GetPreviousBlockHash() []byte to consensus/state.go
 - Removed cs.eventBus.PublishEventNewRound(cs.NewRoundEvent()) event emit from consensus/state.go
 - Removed proposer printing in the validator set string object in types/validator_set.go
+- Added Round to random proposer selection
 ## v0.32.9
 
 _January, 9, 2020_

@@ -937,7 +937,7 @@ func (cs *ConsensusState) enterPropose(height int64, round int) {
 }
 
 func (cs *ConsensusState) isProposer(address []byte) bool {
-	return bytes.Equal(cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash()).Address, address)
+	return bytes.Equal(cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash(), uint64(cs.Round)).Address, address)
 }
 
 func (cs *ConsensusState) defaultDecideProposal(height int64, round int) {
@@ -1524,7 +1524,7 @@ func (cs *ConsensusState) defaultSetProposal(proposal *types.Proposal) error {
 	}
 
 	// Verify signature
-	if !cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash()).PubKey.VerifyBytes(proposal.SignBytes(cs.state.ChainID), proposal.Signature) {
+	if !cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash(), uint64(cs.Round)).PubKey.VerifyBytes(proposal.SignBytes(cs.state.ChainID), proposal.Signature) {
 		return ErrInvalidProposalSignature
 	}
 

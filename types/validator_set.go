@@ -2,8 +2,10 @@ package types
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	"math"
 	"math/big"
 	"sort"
@@ -325,7 +327,10 @@ func (vals *ValidatorSet) findProposer() *Validator {
 }
 
 // Pocket Network's custom addition to tendermint selection
-func (vals *ValidatorSet) GetProposerRandomized(previousBlockHash []byte) *Validator {
+func (vals *ValidatorSet) GetProposerRandomized(previousBlockHash []byte, round uint64) *Validator {
+	var roundBz []byte
+	binary.LittleEndian.PutUint64(roundBz, round)
+	previousBlockHash = tmhash.Sum(append(previousBlockHash, roundBz...))
 	if len(vals.Validators) == 0 {
 		return nil
 	}
