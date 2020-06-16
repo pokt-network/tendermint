@@ -3,13 +3,11 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"math"
 	"math/big"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -99,14 +97,11 @@ func (vals *ValidatorSet) IncrementProposerPriority(times int) {
 	diffMax := PriorityWindowSizeFactor * vals.TotalVotingPower()
 	vals.RescalePriorities(diffMax)
 	vals.shiftByAvgProposerPriority()
-
-	var proposer *Validator
 	// Call IncrementProposerPriority(1) times times.
 	for i := 0; i < times; i++ {
-		proposer = vals.incrementProposerPriority()
+		vals.incrementProposerPriority(vals.Hash(), uint64(i))
 	}
-
-	vals.Proposer = proposer
+	vals.Proposer = nil
 }
 
 func (vals *ValidatorSet) RescalePriorities(diffMax int64) {
@@ -132,18 +127,12 @@ func (vals *ValidatorSet) RescalePriorities(diffMax int64) {
 	}
 }
 
-func (vals *ValidatorSet) incrementProposerPriority() *Validator {
+func (vals *ValidatorSet) incrementProposerPriority(hash []byte, round uint64) {
 	for _, val := range vals.Validators {
 		// Check for overflow for sum.
 		newPrio := safeAddClip(val.ProposerPriority, val.VotingPower)
 		val.ProposerPriority = newPrio
 	}
-	// Decrement the validator with most ProposerPriority.
-	mostest := vals.getValWithMostPriority()
-	// Mind the underflow.
-	mostest.ProposerPriority = safeSubClip(mostest.ProposerPriority, vals.TotalVotingPower())
-
-	return mostest
 }
 
 // Should not be called on an empty validator set.
@@ -338,7 +327,7 @@ func (vals *ValidatorSet) GetProposerRandomized(previousBlockHash []byte, round 
 		return vals.Proposer.Copy()
 	}
 	avgPower := vals.computeAvgVotingPower()
-	var adjacencyMatrix []int // an adjacency matrix to allow for fair proposer selection
+	adjacencyMatrix := make([]int, 0) // an adjacency matrix to allow for fair proposer selection
 	for valIndex, val := range vals.Validators {
 		// append index VP times where VP is the voting power of the validator
 		proposingPower := val.VotingPower / avgPower
@@ -352,36 +341,11 @@ func (vals *ValidatorSet) GetProposerRandomized(previousBlockHash []byte, round 
 	}
 	// calculate the length of the adjacency matrix for a max index selection
 	maxIndex := int64(len(adjacencyMatrix))
-	// hash the bytes and take the first 15 characters of the string
-	hashPart := hex.EncodeToString(previousBlockHash)[:15]
-	var maxValue int64
-	var err error
-	var proposerIndex int
-	// for each hex character of the hash
-	for i := 15; i > 0; i-- {
-		// parse the integer from this point of the hex string onward
-		maxValue, err = strconv.ParseInt(hashPart[:i], 16, 64)
-		if err != nil {
-			panic("could not convert maxValue hash hex string into int64 in randomized proposer selection: " + err.Error())
-		}
-		// if the max index is greater than the resulting integer...
-		if maxIndex > maxValue {
-			// now that we have our max value, substring it to get our final selection
-			firstCharacter, err := strconv.ParseInt(string(hashPart[0]), 16, 64)
-			if err != nil {
-				panic("could not convert first character hex string into int64 in randomized proposer selection: " + err.Error())
-			}
-			// the selection will always be <= i (the max value index)
-			selection := firstCharacter%int64(i) + 1
-			// parse the integer from the beginning to the selection point
-			index, err := strconv.ParseInt(hashPart[:selection], 16, 64)
-			if err != nil {
-				panic("could not convert the final index hex string into int64 in randomized proposer selection: " + err.Error())
-			}
-			proposerIndex = adjacencyMatrix[index]
-			break
-		}
-	}
+	// hash for show and convert back to decimal
+	blockHashDecimal := new(big.Int).SetBytes(previousBlockHash[:8])
+	// mod the selection
+	index := new(big.Int).Mod(blockHashDecimal, big.NewInt(maxIndex))
+	proposerIndex := adjacencyMatrix[index.Int64()]
 	proposer := vals.Validators[proposerIndex]
 	vals.Proposer = proposer
 	return proposer.Copy()
