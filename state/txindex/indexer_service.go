@@ -2,6 +2,7 @@ package txindex
 
 import (
 	"context"
+	"github.com/tendermint/tendermint/libs/log"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 
@@ -77,5 +78,15 @@ func (is *IndexerService) OnStart() error {
 func (is *IndexerService) OnStop() {
 	if is.eventBus.IsRunning() {
 		_ = is.eventBus.UnsubscribeAll(context.Background(), subscriber)
+	}
+}
+
+func SyncTxIndexer(logger log.Logger, idr TxIndexer, b *Batch, height int64) {
+	if idr != nil {
+		if err := idr.AddBatch(b); err != nil {
+			logger.Error("Failed to index block", "height", height, "err", err)
+		} else {
+			logger.Info("Indexed block", "height", height)
+		}
 	}
 }
