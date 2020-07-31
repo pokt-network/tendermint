@@ -16,7 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 
-	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/go-amino"
 	abci "github.com/tendermint/tendermint/abci/types"
 	bcv0 "github.com/tendermint/tendermint/blockchain/v0"
 	bcv1 "github.com/tendermint/tendermint/blockchain/v1"
@@ -109,6 +109,15 @@ func DefaultNewNode(config *cfg.Config, logger log.Logger) (*Node, error) {
 		oldPV.Upgrade(newPrivValKey, newPrivValState)
 	}
 
+	txIndexer, err := CreateTxIndexer(config, DefaultDBProvider)
+	if err != nil {
+		return nil, err
+	}
+	blockStore, stateDB, err := InitDBs(config, DefaultDBProvider)
+	if err != nil {
+		return nil, err
+	}
+
 	return NewNode(config,
 		privval.LoadOrGenFilePV(newPrivValKey, newPrivValState),
 		nodeKey,
@@ -117,6 +126,9 @@ func DefaultNewNode(config *cfg.Config, logger log.Logger) (*Node, error) {
 		DefaultDBProvider,
 		DefaultMetricsProvider(config.Instrumentation),
 		logger,
+		txIndexer,
+		blockStore,
+		stateDB,
 	)
 }
 
@@ -202,7 +214,7 @@ type Node struct {
 	prometheusSrv    *http.Server
 }
 
-func initDBs(config *cfg.Config, dbProvider DBProvider) (blockStore *store.BlockStore, stateDB dbm.DB, err error) {
+func InitDBs(config *cfg.Config, dbProvider DBProvider) (blockStore *store.BlockStore, stateDB dbm.DB, err error) {
 	var blockStoreDB dbm.DB
 	blockStoreDB, err = dbProvider(&DBContext{"blockstore", config})
 	if err != nil {
@@ -236,15 +248,13 @@ func createAndStartEventBus(logger log.Logger) (*types.EventBus, error) {
 	return eventBus, nil
 }
 
-func createAndStartIndexerService(config *cfg.Config, dbProvider DBProvider,
-	eventBus *types.EventBus, logger log.Logger) (*txindex.IndexerService, txindex.TxIndexer, error) {
-
+func CreateTxIndexer(config *cfg.Config, dbProvider DBProvider) (*txindex.TxIndexer, error) {
 	var txIndexer txindex.TxIndexer
 	switch config.TxIndex.Indexer {
 	case "kv":
 		store, err := dbProvider(&DBContext{"tx_index", config})
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		switch {
 		case config.TxIndex.IndexTags != "":
@@ -257,13 +267,17 @@ func createAndStartIndexerService(config *cfg.Config, dbProvider DBProvider,
 	default:
 		txIndexer = &null.TxIndex{}
 	}
+	return &txIndexer, nil
+}
 
-	indexerService := txindex.NewIndexerService(txIndexer, eventBus)
+func startIndexerService(config *cfg.Config, dbProvider DBProvider,
+	eventBus *types.EventBus, txIndexer *txindex.TxIndexer, logger log.Logger) (*txindex.IndexerService, error) {
+	indexerService := txindex.NewIndexerService(*txIndexer, eventBus)
 	indexerService.SetLogger(logger.With("module", "txindex"))
 	if err := indexerService.Start(); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return indexerService, txIndexer, nil
+	return indexerService, nil
 }
 
 func doHandshake(
@@ -562,12 +576,10 @@ func NewNode(config *cfg.Config,
 	dbProvider DBProvider,
 	metricsProvider MetricsProvider,
 	logger log.Logger,
+	txIndexer *txindex.TxIndexer,
+	blockStore *store.BlockStore,
+	stateDB dbm.DB,
 	options ...Option) (*Node, error) {
-
-	blockStore, stateDB, err := initDBs(config, dbProvider)
-	if err != nil {
-		return nil, err
-	}
 
 	state, genDoc, err := LoadStateFromDBOrGenesisDocProvider(stateDB, genesisDocProvider)
 	if err != nil {
@@ -590,7 +602,7 @@ func NewNode(config *cfg.Config,
 	}
 
 	// Transaction indexing
-	indexerService, txIndexer, err := createAndStartIndexerService(config, dbProvider, eventBus, logger)
+	indexerService, err := startIndexerService(config, dbProvider, eventBus, txIndexer, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -598,7 +610,7 @@ func NewNode(config *cfg.Config,
 	// Create the handshaker, which calls RequestInfo, sets the AppVersion on the state,
 	// and replays any blocks as necessary to sync tendermint with the app.
 	consensusLogger := logger.With("module", "consensus")
-	if err := doHandshake(stateDB, state, blockStore, genDoc, eventBus, proxyApp, consensusLogger, txIndexer); err != nil {
+	if err := doHandshake(stateDB, state, blockStore, genDoc, eventBus, proxyApp, consensusLogger, *txIndexer); err != nil {
 		return nil, err
 	}
 
@@ -647,7 +659,7 @@ func NewNode(config *cfg.Config,
 		proxyApp.Consensus(),
 		mempool,
 		evidencePool,
-		txIndexer,
+		*txIndexer,
 		sm.BlockExecutorWithMetrics(smMetrics),
 	)
 
@@ -663,7 +675,7 @@ func NewNode(config *cfg.Config,
 		privValidator, csMetrics, fastSync, eventBus, consensusLogger,
 	)
 
-	nodeInfo, err := makeNodeInfo(config, nodeKey, txIndexer, genDoc, state)
+	nodeInfo, err := makeNodeInfo(config, nodeKey, *txIndexer, genDoc, state)
 	if err != nil {
 		return nil, err
 	}
@@ -732,7 +744,7 @@ func NewNode(config *cfg.Config,
 		pexReactor:       pexReactor,
 		evidencePool:     evidencePool,
 		proxyApp:         proxyApp,
-		txIndexer:        txIndexer,
+		txIndexer:        *txIndexer,
 		indexerService:   indexerService,
 		eventBus:         eventBus,
 	}

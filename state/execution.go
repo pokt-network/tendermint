@@ -127,7 +127,6 @@ func (blockExec *BlockExecutor) ValidateBlock(state State, block *types.Block) e
 // from outside this package to process and commit an entire block.
 // It takes a blockID to avoid recomputing the parts hash.
 func (blockExec *BlockExecutor) ApplyBlock(state State, blockID types.BlockID, block *types.Block) (State, error) {
-
 	if err := blockExec.ValidateBlock(state, block); err != nil {
 		return state, ErrInvalidBlock(err)
 	}
@@ -514,8 +513,9 @@ func ExecCommitBlock(
 	block *types.Block,
 	logger log.Logger,
 	stateDB dbm.DB,
+	indexer txindex.TxIndexer,
 ) ([]byte, error) {
-	_, err := execBlockOnProxyApp(logger, appConnConsensus, block, stateDB)
+	resp, err := execBlockOnProxyApp(logger, appConnConsensus, block, stateDB)
 	if err != nil {
 		logger.Error("Error executing block on proxy app", "height", block.Height, "err", err)
 		return nil, err
@@ -526,6 +526,21 @@ func ExecCommitBlock(
 		logger.Error("Client error during proxyAppConn.CommitSync", "err", res)
 		return nil, err
 	}
+	// create a new batch
+	b := txindex.NewBatch(block.NumTxs)
+	for i, tx := range block.Txs {
+		err := b.Add(&types.TxResult{
+			Height: block.Height,
+			Index:  uint32(i),
+			Tx:     tx,
+			Result: *(resp.DeliverTx[i]),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	// update txIndexer
+	txindex.SyncTxIndexer(logger, indexer, b, block.Height)
 	// ResponseCommit has no error or log, just data
 	return res.Data, nil
 }
