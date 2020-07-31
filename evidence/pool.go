@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	clist "github.com/tendermint/tendermint/libs/clist"
+	"github.com/tendermint/tendermint/libs/clist"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
@@ -158,6 +158,10 @@ func (evpool *EvidencePool) removeEvidence(height, maxAge int64, blockEvidenceMa
 			e.DetachPrev()
 		}
 	}
+}
+
+func (evpool *EvidencePool) RollbackEvidence(height int64, latestHeight int64) {
+	evpool.evidenceStore.DeleteEvidenceFromHeight(height, latestHeight)
 }
 
 func evMapKey(ev types.Evidence) string {

@@ -22,6 +22,9 @@ type TxIndexer interface {
 
 	// Search allows you to query for transactions.
 	Search(q *query.Query) ([]*types.TxResult, error)
+
+	// DeleteFromHeight method added for rollback
+	DeleteFromHeight(height int64) error
 }
 
 //----------------------------------------------------

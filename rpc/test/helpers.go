@@ -164,11 +164,31 @@ func NewTendermint(app abci.Application, opts *Options) *nm.Node {
 	if err != nil {
 		panic(err)
 	}
+
+	txIndexer, err := nm.CreateTxIndexer(config, nm.DefaultDBProvider)
+	if err != nil {
+		return nil
+	}
+	blockStore, stateDB, err := nm.InitDBs(config, nm.DefaultDBProvider)
+	if err != nil {
+		return nil
+	}
+
+	// Make Evidence Reactor
+	evidenceReactor, evidencePool, err := nm.CreateEvidenceReactor(config, nm.DefaultDBProvider, stateDB, logger)
+	if err != nil {
+		return nil
+	}
 	node, err := nm.NewNode(config, pv, nodeKey, papp,
 		nm.DefaultGenesisDocProviderFunc(config),
 		nm.DefaultDBProvider,
 		nm.DefaultMetricsProvider(config.Instrumentation),
-		logger)
+		logger,
+		txIndexer,
+		blockStore,
+		stateDB,
+		evidencePool,
+		evidenceReactor )
 	if err != nil {
 		panic(err)
 	}

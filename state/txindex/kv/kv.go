@@ -157,6 +157,51 @@ func (txi *TxIndex) indexEvents(result *types.TxResult, hash []byte, store dbm.S
 	}
 }
 
+func (txi *TxIndex) deleteEvents(result *types.TxResult, hash []byte, store dbm.SetDeleter) {
+	for _, event := range result.Result.Events {
+		// only index events with a non-empty type
+		if len(event.Type) == 0 {
+			continue
+		}
+
+		for _, attr := range event.Attributes {
+			if len(attr.Key) == 0 {
+				continue
+			}
+
+			compositeTag := fmt.Sprintf("%s.%s", event.Type, string(attr.Key))
+			//if txi.indexAllTags || cmn.StringInSlice(compositeTag, txi.tagsToIndex) { // defensive
+			store.Delete(keyForEvent(compositeTag, attr.Value, result))
+			//}
+		}
+	}
+}
+
+func (txi *TxIndex) DeleteFromHeight(height int64) error {
+	q, err := query.New("tx.height > " + strconv.Itoa(int(height)))
+	if err != nil {
+		return err
+	}
+	res, err := txi.Search(q)
+	if err != nil {
+		return err
+	}
+	b := txi.store.NewBatch()
+	defer b.Close()
+	for _, txRes := range res {
+		hash := txRes.Tx.Hash()
+		// index tx by events
+		txi.deleteEvents(txRes, hash, b)
+		// index tx by height
+		if txi.indexAllTags || cmn.StringInSlice(types.TxHeightKey, txi.tagsToIndex) {
+			b.Delete(keyForHeight(txRes))
+		}
+		b.Delete(hash)
+	}
+	b.WriteSync()
+	return nil
+}
+
 // Search performs a search using the given query. It breaks the query into
 // conditions (like "tx.height > 5"). For each condition, it queries the DB
 // index. One special use cases here: (1) if "tx.hash" is found, it returns tx

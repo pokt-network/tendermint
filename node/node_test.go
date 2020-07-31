@@ -301,6 +301,20 @@ func TestNodeNewNodeCustomReactors(t *testing.T) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	require.NoError(t, err)
 
+	txIndexer, err := CreateTxIndexer(config, DefaultDBProvider)
+	if err != nil {
+			t.Fatalf(err.Error())
+	}
+	blockStore, stateDB, err := InitDBs(config, DefaultDBProvider)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	// Make Evidence Reactor
+	evidenceReactor, evidencePool, err := CreateEvidenceReactor(config, DefaultDBProvider, stateDB, log.TestingLogger())
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
 	n, err := NewNode(config,
 		privval.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile()),
 		nodeKey,
@@ -309,6 +323,11 @@ func TestNodeNewNodeCustomReactors(t *testing.T) {
 		DefaultDBProvider,
 		DefaultMetricsProvider(config.Instrumentation),
 		log.TestingLogger(),
+		txIndexer,
+		blockStore,
+		stateDB,
+		evidencePool,
+		evidenceReactor,
 		CustomReactors(map[string]p2p.Reactor{"FOO": cr, "BLOCKCHAIN": customBlockchainReactor}),
 	)
 	require.NoError(t, err)

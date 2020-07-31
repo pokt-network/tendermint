@@ -2,7 +2,6 @@ package evidence
 
 import (
 	"fmt"
-
 	"github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 )
@@ -47,6 +46,9 @@ func bE(h int64) string {
 }
 
 func keyLookupFromHeightAndHash(height int64, hash []byte) []byte {
+	if hash == nil {
+		return _key("%s/%s", baseKeyLookup, bE(height))
+	}
 	return _key("%s/%s/%X", baseKeyLookup, bE(height), hash)
 }
 
@@ -56,6 +58,13 @@ func keyOutqueue(evidence types.Evidence, priority int64) []byte {
 
 func keyPending(evidence types.Evidence) []byte {
 	return _key("%s/%s/%X", baseKeyPending, bE(evidence.Height()), evidence.Hash())
+}
+
+func keyPendingFromHeightAndHash(height int64, hash []byte) []byte {
+	if hash == nil {
+		return _key("%s/%s", baseKeyPending, bE(height))
+	}
+	return _key("%s/%s/%X", baseKeyPending, bE(height), hash)
 }
 
 func _key(fmt_ string, o ...interface{}) []byte {
@@ -132,6 +141,38 @@ func (store *EvidenceStore) GetEvidenceInfo(height int64, hash []byte) EvidenceI
 		panic(err)
 	}
 	return ei
+}
+
+func (store *EvidenceStore) DeleteOutqueueEvidence() {
+	iter := dbm.IteratePrefix(store.db, []byte(baseKeyOutqueue))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.db.Delete(iter.Key())
+	}
+}
+
+func (store *EvidenceStore) DeletePendingEvidence(height int64) {
+	iter := dbm.IteratePrefix(store.db, keyPendingFromHeightAndHash(height, nil))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.db.Delete(iter.Key())
+	}
+}
+
+func (store *EvidenceStore) DeleteLookupEvidence(height int64) {
+	iter := dbm.IteratePrefix(store.db, keyLookupFromHeightAndHash(height, nil))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.db.Delete(iter.Key())
+	}
+}
+
+func (store *EvidenceStore) DeleteEvidenceFromHeight(height int64, latestHeight int64) {
+	store.DeleteOutqueueEvidence()
+	for ; height <= latestHeight; height++ {
+		store.DeletePendingEvidence(height)
+		store.DeleteLookupEvidence(height)
+	}
 }
 
 // AddNewEvidence adds the given evidence to the database.
