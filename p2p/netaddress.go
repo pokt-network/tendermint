@@ -48,7 +48,7 @@ func NewNetAddress(id ID, addr net.Addr) *NetAddress {
 		if flag.Lookup("test.v") == nil { // normal run
 			panic(fmt.Sprintf("Only TCPAddrs are supported. Got: %v", addr))
 		} else { // in testing
-			netAddr := NewNetAddressIPPort(net.IP("0.0.0.0"), 0)
+			netAddr := NewNetAddressIPPort(net.IP("127.0.0.1"), 0)
 			netAddr.ID = id
 			return netAddr
 		}
@@ -246,9 +246,9 @@ func (na *NetAddress) ReachabilityTo(o *NetAddress) int {
 		Unreachable = 0
 		Default     = iota
 		Teredo
-		Ipv6_weak
+		Ipv6Weak
 		Ipv4
-		Ipv6_strong
+		Ipv6Strong
 	)
 	switch {
 	case !na.Routable():
@@ -262,7 +262,7 @@ func (na *NetAddress) ReachabilityTo(o *NetAddress) int {
 		case o.IP.To4() != nil:
 			return Ipv4
 		default: // ipv6
-			return Ipv6_weak
+			return Ipv6Weak
 		}
 	case na.IP.To4() != nil:
 		if o.Routable() && o.IP.To4() != nil {
@@ -284,9 +284,9 @@ func (na *NetAddress) ReachabilityTo(o *NetAddress) int {
 			return Ipv4
 		case tunnelled:
 			// only prioritise ipv6 if we aren't tunnelling it.
-			return Ipv6_weak
+			return Ipv6Weak
 		}
-		return Ipv6_strong
+		return Ipv6Strong
 	}
 }
 
@@ -313,21 +313,43 @@ var rfc4862 = net.IPNet{IP: net.ParseIP("FE80::"), Mask: net.CIDRMask(64, 128)}
 var rfc6052 = net.IPNet{IP: net.ParseIP("64:FF9B::"), Mask: net.CIDRMask(96, 128)}
 var rfc6145 = net.IPNet{IP: net.ParseIP("::FFFF:0:0:0"), Mask: net.CIDRMask(96, 128)}
 var zero4 = net.IPNet{IP: net.ParseIP("0.0.0.0"), Mask: net.CIDRMask(8, 32)}
+var (
+	// onionCatNet defines the IPv6 address block used to support Tor.
+	// bitcoind encodes a .onion address as a 16 byte number by decoding the
+	// address prior to the .onion (i.e. the key hash) base32 into a ten
+	// byte number. It then stores the first 6 bytes of the address as
+	// 0xfd, 0x87, 0xd8, 0x7e, 0xeb, 0x43.
+	//
+	// This is the same range used by OnionCat, which is part part of the
+	// RFC4193 unique local IPv6 range.
+	//
+	// In summary the format is:
+	// { magic 6 bytes, 10 bytes base32 decode of key hash }
+	onionCatNet = ipNet("fd87:d87e:eb43::", 48, 128)
+)
+
+// ipNet returns a net.IPNet struct given the passed IP address string, number
+// of one bits to include at the start of the mask, and the total number of bits
+// for the mask.
+func ipNet(ip string, ones, bits int) net.IPNet {
+	return net.IPNet{IP: net.ParseIP(ip), Mask: net.CIDRMask(ones, bits)}
+}
 
 func (na *NetAddress) RFC1918() bool {
 	return rfc1918_10.Contains(na.IP) ||
 		rfc1918_192.Contains(na.IP) ||
 		rfc1918_172.Contains(na.IP)
 }
-func (na *NetAddress) RFC3849() bool { return rfc3849.Contains(na.IP) }
-func (na *NetAddress) RFC3927() bool { return rfc3927.Contains(na.IP) }
-func (na *NetAddress) RFC3964() bool { return rfc3964.Contains(na.IP) }
-func (na *NetAddress) RFC4193() bool { return rfc4193.Contains(na.IP) }
-func (na *NetAddress) RFC4380() bool { return rfc4380.Contains(na.IP) }
-func (na *NetAddress) RFC4843() bool { return rfc4843.Contains(na.IP) }
-func (na *NetAddress) RFC4862() bool { return rfc4862.Contains(na.IP) }
-func (na *NetAddress) RFC6052() bool { return rfc6052.Contains(na.IP) }
-func (na *NetAddress) RFC6145() bool { return rfc6145.Contains(na.IP) }
+func (na *NetAddress) RFC3849() bool     { return rfc3849.Contains(na.IP) }
+func (na *NetAddress) RFC3927() bool     { return rfc3927.Contains(na.IP) }
+func (na *NetAddress) RFC3964() bool     { return rfc3964.Contains(na.IP) }
+func (na *NetAddress) RFC4193() bool     { return rfc4193.Contains(na.IP) }
+func (na *NetAddress) RFC4380() bool     { return rfc4380.Contains(na.IP) }
+func (na *NetAddress) RFC4843() bool     { return rfc4843.Contains(na.IP) }
+func (na *NetAddress) RFC4862() bool     { return rfc4862.Contains(na.IP) }
+func (na *NetAddress) RFC6052() bool     { return rfc6052.Contains(na.IP) }
+func (na *NetAddress) RFC6145() bool     { return rfc6145.Contains(na.IP) }
+func (na *NetAddress) OnionCatTor() bool { return onionCatNet.Contains(na.IP) }
 
 func removeProtocolIfDefined(addr string) string {
 	if strings.Contains(addr, "://") {

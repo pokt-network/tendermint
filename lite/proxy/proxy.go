@@ -6,14 +6,13 @@ import (
 
 	amino "github.com/tendermint/go-amino"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/rpc/client"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	"github.com/tendermint/tendermint/rpc/core"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
-	rpctypes "github.com/tendermint/tendermint/rpc/lib/types"
+	rpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
+	rpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
 	"github.com/tendermint/tendermint/types"
 )
 
@@ -46,7 +45,7 @@ func StartProxy(c rpcclient.Client, listenAddr string, logger log.Logger, maxOpe
 	}
 	wm := rpcserver.NewWebsocketManager(r, cdc, rpcserver.OnDisconnect(unsubscribeFromAllEvents))
 	wm.SetLogger(logger)
-	core.SetLogger(logger)
+	// core.SetLogger(logger)
 	mux.HandleFunc(wsEndpoint, wm.WebsocketHandler)
 
 	config := rpcserver.DefaultConfig()
@@ -55,7 +54,7 @@ func StartProxy(c rpcclient.Client, listenAddr string, logger log.Logger, maxOpe
 	if err != nil {
 		return err
 	}
-	return rpcserver.StartHTTPServer(l, mux, logger, config)
+	return rpcserver.Serve(l, mux, logger, config)
 }
 
 // RPCRoutes just routes everything to the given client, as if it were
@@ -134,7 +133,7 @@ func makeValidatorsFunc(c rpcclient.Client) func(
 	height *int64,
 ) (*ctypes.ResultValidators, error) {
 	return func(ctx *rpctypes.Context, height *int64) (*ctypes.ResultValidators, error) {
-		return c.Validators(height)
+		return c.Validators(height, 0, 0)
 	}
 }
 
@@ -168,9 +167,9 @@ func makeBroadcastTxAsyncFunc(c rpcclient.Client) func(
 func makeABCIQueryFunc(c rpcclient.Client) func(
 	ctx *rpctypes.Context,
 	path string,
-	data cmn.HexBytes,
+	data bytes.HexBytes,
 ) (*ctypes.ResultABCIQuery, error) {
-	return func(ctx *rpctypes.Context, path string, data cmn.HexBytes) (*ctypes.ResultABCIQuery, error) {
+	return func(ctx *rpctypes.Context, path string, data bytes.HexBytes) (*ctypes.ResultABCIQuery, error) {
 		return c.ABCIQuery(path, data)
 	}
 }

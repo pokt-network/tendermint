@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/libs/bytes"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 )
 
 var (
-	ErrInvalidBlockPartSignature = errors.New("Error invalid block part signature")
-	ErrInvalidBlockPartHash      = errors.New("Error invalid block part hash")
+	ErrInvalidBlockPartSignature = errors.New("error invalid block part signature")
+	ErrInvalidBlockPartHash      = errors.New("error invalid block part hash")
 )
 
 // Proposal defines a block proposal for the consensus.
@@ -46,32 +47,32 @@ func NewProposal(height int64, round int, polRound int, blockID BlockID) *Propos
 // ValidateBasic performs basic validation.
 func (p *Proposal) ValidateBasic() error {
 	if p.Type != ProposalType {
-		return errors.New("Invalid Type")
+		return errors.New("invalid Type")
 	}
 	if p.Height < 0 {
-		return errors.New("Negative Height")
+		return errors.New("negative Height")
 	}
 	if p.Round < 0 {
-		return errors.New("Negative Round")
+		return errors.New("negative Round")
 	}
 	if p.POLRound < -1 {
-		return errors.New("Negative POLRound (exception: -1)")
+		return errors.New("negative POLRound (exception: -1)")
 	}
 	if err := p.BlockID.ValidateBasic(); err != nil {
-		return fmt.Errorf("Wrong BlockID: %v", err)
+		return fmt.Errorf("wrong BlockID: %v", err)
 	}
 	// ValidateBasic above would pass even if the BlockID was empty:
 	if !p.BlockID.IsComplete() {
-		return fmt.Errorf("Expected a complete, non-empty BlockID, got: %v", p.BlockID)
+		return fmt.Errorf("expected a complete, non-empty BlockID, got: %v", p.BlockID)
 	}
 
 	// NOTE: Timestamp validation is subtle and handled elsewhere.
 
 	if len(p.Signature) == 0 {
-		return errors.New("Signature is missing")
+		return errors.New("signature is missing")
 	}
 	if len(p.Signature) > MaxSignatureSize {
-		return fmt.Errorf("Signature is too big (max: %d)", MaxSignatureSize)
+		return fmt.Errorf("signature is too big (max: %d)", MaxSignatureSize)
 	}
 	return nil
 }
@@ -83,7 +84,7 @@ func (p *Proposal) String() string {
 		p.Round,
 		p.BlockID,
 		p.POLRound,
-		cmn.Fingerprint(p.Signature),
+		bytes.Fingerprint(p.Signature),
 		CanonicalTime(p.Timestamp))
 }
 
@@ -94,4 +95,47 @@ func (p *Proposal) SignBytes(chainID string) []byte {
 		panic(err)
 	}
 	return bz
+}
+
+// ToProto converts Proposal to protobuf
+func (p *Proposal) ToProto() *tmproto.Proposal {
+	if p == nil {
+		return nil
+	}
+	pb := new(tmproto.Proposal)
+
+	pb.BlockID = p.BlockID.ToProto()
+	pb.Type = tmproto.SignedMsgType(p.Type)
+	pb.Height = p.Height
+	pb.Round = int32(p.Round)
+	pb.PolRound = int32(p.POLRound)
+	pb.Timestamp = p.Timestamp
+	pb.Signature = p.Signature
+
+	return pb
+}
+
+// FromProto sets a protobuf Proposal to the given pointer.
+// It returns an error if the proposal is invalid.
+func ProposalFromProto(pp *tmproto.Proposal) (*Proposal, error) {
+	if pp == nil {
+		return nil, errors.New("nil proposal")
+	}
+
+	p := new(Proposal)
+
+	blockID, err := BlockIDFromProto(&pp.BlockID)
+	if err != nil {
+		return nil, err
+	}
+
+	p.BlockID = *blockID
+	p.Type = SignedMsgType(pp.Type)
+	p.Height = pp.Height
+	p.Round = int(pp.Round)
+	p.POLRound = int(pp.PolRound)
+	p.Timestamp = pp.Timestamp
+	p.Signature = pp.Signature
+
+	return p, p.ValidateBasic()
 }

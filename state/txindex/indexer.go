@@ -1,6 +1,7 @@
 package txindex
 
 import (
+	"context"
 	"errors"
 
 	"github.com/tendermint/tendermint/libs/pubsub/query"
@@ -21,10 +22,7 @@ type TxIndexer interface {
 	Get(hash []byte) (*types.TxResult, error)
 
 	// Search allows you to query for transactions.
-	Search(q *query.Query) ([]*types.TxResult, error)
-
-	// DeleteFromHeight method added for rollback
-	DeleteFromHeight(height int64) error
+	Search(ctx context.Context, q *query.Query) ([]*types.TxResult, error)
 }
 
 //----------------------------------------------------
@@ -58,4 +56,4 @@ func (b *Batch) Size() int {
 // Errors
 
 // ErrorEmptyHash indicates empty hash
-var ErrorEmptyHash = errors.New("Transaction hash cannot be empty")
+var ErrorEmptyHash = errors.New("transaction hash cannot be empty")
