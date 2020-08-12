@@ -278,6 +278,7 @@ func TestCreateProposalBlock(t *testing.T) {
 		proxyApp.Consensus(),
 		mempool,
 		evidencePool,
+		nil,
 	)
 
 	commit := types.NewCommit(height-1, 0, types.BlockID{}, nil)

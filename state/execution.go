@@ -2,6 +2,7 @@ package state
 
 import (
 	"fmt"
+	"github.com/tendermint/tendermint/state/txindex"
 	"time"
 
 	dbm "github.com/tendermint/tm-db"
@@ -38,6 +39,8 @@ type BlockExecutor struct {
 	logger log.Logger
 
 	metrics *Metrics
+
+	indexer txindex.TxIndexer
 }
 
 type BlockExecutorOption func(executor *BlockExecutor)
@@ -56,6 +59,7 @@ func NewBlockExecutor(
 	proxyApp proxy.AppConnConsensus,
 	mempool mempl.Mempool,
 	evpool EvidencePool,
+	indexer txindex.TxIndexer,
 	options ...BlockExecutorOption,
 ) *BlockExecutor {
 	res := &BlockExecutor{
@@ -66,6 +70,7 @@ func NewBlockExecutor(
 		evpool:   evpool,
 		logger:   logger,
 		metrics:  NopMetrics(),
+		indexer:  indexer,
 	}
 
 	for _, option := range options {
@@ -238,7 +243,21 @@ func (blockExec *BlockExecutor) Commit(
 		TxPreCheck(state),
 		TxPostCheck(state),
 	)
-
+	// create a new batch
+	b := txindex.NewBatch(int64(len(block.Txs)))
+	for i, tx := range block.Txs {
+		err := b.Add(&types.TxResult{
+			Height: block.Height,
+			Index:  uint32(i),
+			Tx:     tx,
+			Result: *(deliverTxResponses[i]),
+		})
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+	// update txIndexer
+	txindex.SyncTxIndexer(blockExec.logger, blockExec.indexer, b, block.Height)
 	return res.Data, res.RetainHeight, err
 }
 
