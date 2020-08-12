@@ -1030,6 +1030,10 @@ func (n *Node) PEXReactor() *pex.Reactor {
 	return n.pexReactor
 }
 
+func (n *Node) TxIndexer() txindex.TxIndexer {
+	return n.txIndexer
+}
+
 // EvidencePool returns the Node's EvidencePool.
 func (n *Node) EvidencePool() *evidence.Pool {
 	return n.evidencePool
