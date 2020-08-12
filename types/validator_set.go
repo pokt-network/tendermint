@@ -2,7 +2,9 @@ package types
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	"math"
 	"math/big"
 	"sort"
@@ -99,13 +101,11 @@ func (vals *ValidatorSet) IncrementProposerPriority(times int) {
 	vals.RescalePriorities(diffMax)
 	vals.shiftByAvgProposerPriority()
 
-	var proposer *Validator
 	// Call IncrementProposerPriority(1) times times.
 	for i := 0; i < times; i++ {
-		proposer = vals.incrementProposerPriority()
+		vals.incrementProposerPriority(vals.Hash(), uint64(i))
 	}
-
-	vals.Proposer = proposer
+	vals.Proposer = nil
 }
 
 // RescalePriorities rescales the priorities such that the distance between the maximum and minimum
@@ -133,18 +133,12 @@ func (vals *ValidatorSet) RescalePriorities(diffMax int64) {
 	}
 }
 
-func (vals *ValidatorSet) incrementProposerPriority() *Validator {
+func (vals *ValidatorSet) incrementProposerPriority(hash []byte, round uint64) {
 	for _, val := range vals.Validators {
 		// Check for overflow for sum.
 		newPrio := safeAddClip(val.ProposerPriority, val.VotingPower)
 		val.ProposerPriority = newPrio
 	}
-	// Decrement the validator with most ProposerPriority.
-	mostest := vals.getValWithMostPriority()
-	// Mind the underflow.
-	mostest.ProposerPriority = safeSubClip(mostest.ProposerPriority, vals.TotalVotingPower())
-
-	return mostest
 }
 
 // Should not be called on an empty validator set.
@@ -161,6 +155,22 @@ func (vals *ValidatorSet) computeAvgProposerPriority() int64 {
 
 	// This should never happen: each val.ProposerPriority is in bounds of int64.
 	panic(fmt.Sprintf("Cannot represent avg ProposerPriority as an int64 %v", avg))
+}
+
+// Should not be called on an empty validator set.
+func (vals *ValidatorSet) computeAvgVotingPower() int64 {
+	n := int64(len(vals.Validators))
+	sum := big.NewInt(0)
+	for _, val := range vals.Validators {
+		sum.Add(sum, big.NewInt(val.VotingPower))
+	}
+	avg := sum.Div(sum, big.NewInt(n))
+	if avg.IsInt64() {
+		return avg.Int64()
+	}
+
+	// This should never happen: each val.ProposerPriority is in bounds of int64.
+	panic(fmt.Sprintf("Cannot represent avg voting power as an int64 %v", avg))
 }
 
 // Compute the difference between the max and min ProposerPriority of that set.
@@ -309,6 +319,42 @@ func (vals *ValidatorSet) findProposer() *Validator {
 		}
 	}
 	return proposer
+}
+
+// Pocket Network's custom addition to tendermint selection
+func (vals *ValidatorSet) GetProposerRandomized(previousBlockHash []byte, round uint64) *Validator {
+	roundBz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(roundBz, round)
+	previousBlockHash = tmhash.Sum(append(previousBlockHash, roundBz...))
+	if len(vals.Validators) == 0 {
+		return nil
+	}
+	if vals.Proposer != nil {
+		return vals.Proposer.Copy()
+	}
+	avgPower := vals.computeAvgVotingPower()
+	adjacencyMatrix := make([]int, 0) // an adjacency matrix to allow for fair proposer selection
+	for valIndex, val := range vals.Validators {
+		// append index VP times where VP is the voting power of the validator
+		proposingPower := val.VotingPower / avgPower
+		// give everyone atleast 1 ticket
+		if proposingPower == 0 {
+			proposingPower = 1
+		}
+		for j := int64(0); j < proposingPower; j++ {
+			adjacencyMatrix = append(adjacencyMatrix, valIndex)
+		}
+	}
+	// calculate the length of the adjacency matrix for a max index selection
+	maxIndex := int64(len(adjacencyMatrix))
+	// hash for show and convert back to decimal
+	blockHashDecimal := new(big.Int).SetBytes(previousBlockHash[:8])
+	// mod the selection
+	index := new(big.Int).Mod(blockHashDecimal, big.NewInt(maxIndex))
+	proposerIndex := adjacencyMatrix[index.Int64()]
+	proposer := vals.Validators[proposerIndex]
+	vals.Proposer = proposer
+	return proposer.Copy()
 }
 
 // Hash returns the Merkle root hash build using validators (as leaves) in the
@@ -926,11 +972,9 @@ func (vals *ValidatorSet) StringIndented(indent string) string {
 		return false
 	})
 	return fmt.Sprintf(`ValidatorSet{
-%s  Proposer: %v
 %s  Validators:
 %s    %v
 %s}`,
-		indent, vals.GetProposer().String(),
 		indent,
 		indent, strings.Join(valStrings, "\n"+indent+"    "),
 		indent)
