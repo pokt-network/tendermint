@@ -160,26 +160,58 @@ func (txi *TxIndex) indexEvents(result *types.TxResult, hash []byte, store dbm.S
 	}
 }
 
-// Search performs a search using the given query.
-//
-// It breaks the query into conditions (like "tx.height > 5"). For each
-// condition, it queries the DB index. One special use cases here: (1) if
-// "tx.hash" is found, it returns tx result for it (2) for range queries it is
-// better for the client to provide both lower and upper bounds, so we are not
-// performing a full scan. Results from querying indexes are then intersected
-// and returned to the caller, in no particular order.
-//
-// Search will exit early and return any result fetched so far,
-// when a message is received on the context chan.
-func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResult, error) {
-	// Potentially exit early.
-	select {
-	case <-ctx.Done():
-		results := make([]*types.TxResult, 0)
-		return results, nil
-	default:
-	}
+func (txi *TxIndex) deleteEvents(result *types.TxResult, hash []byte, store dbm.SetDeleter) {
+	for _, event := range result.Result.Events {
+		// only index events with a non-empty type
+		if len(event.Type) == 0 {
+			continue
+		}
 
+		for _, attr := range event.Attributes {
+			if len(attr.Key) == 0 {
+				continue
+			}
+
+			compositeTag := fmt.Sprintf("%s.%s", event.Type, string(attr.Key))
+			//if txi.indexAllTags || cmn.StringInSlice(compositeTag, txi.tagsToIndex) { // defensive
+			store.Delete(keyForEvent(compositeTag, attr.Value, result))
+			//}
+		}
+	}
+}
+
+func (txi *TxIndex) DeleteFromHeight(ctx context.Context, height int64) error {
+	q, err := query.New("tx.height > " + strconv.Itoa(int(height)))
+	if err != nil {
+		return err
+	}
+	res, err := txi.Search(ctx, q)
+	if err != nil {
+		return err
+	}
+	b := txi.store.NewBatch()
+	defer b.Close()
+	for _, txRes := range res {
+		hash := txRes.Tx.Hash()
+		// index tx by events
+		txi.deleteEvents(txRes, hash, b)
+		// index tx by height
+		if txi.indexAllEvents || tmstring.StringInSlice(types.TxHeightKey, txi.compositeKeysToIndex) {
+			b.Delete(keyForHeight(txRes))
+		}
+		b.Delete(hash)
+	}
+	b.WriteSync()
+	return nil
+}
+
+// Search performs a search using the given query. It breaks the query into
+// conditions (like "tx.height > 5"). For each condition, it queries the DB
+// index. One special use cases here: (1) if "tx.hash" is found, it returns tx
+// result for it (2) for range queries it is better for the client to provide
+// both lower and upper bounds, so we are not performing a full scan. Results
+// from querying indexes are then intersected and returned to the caller.
+func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResult, error) {
 	var hashesInitialized bool
 	filteredHashes := make(map[string][]byte)
 

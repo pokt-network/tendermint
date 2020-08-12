@@ -356,9 +356,10 @@ func saveValidatorsInfo(db dbm.DB, height, lastHeightChanged int64, valSet *type
 	}
 	// Only persist validator set if it was updated or checkpoint height (see
 	// valSetCheckpointInterval) is reached.
-	if height == lastHeightChanged || height%valSetCheckpointInterval == 0 {
-		valInfo.ValidatorSet = valSet
-	}
+	//if height == lastHeightChanged || height%valSetCheckpointInterval == 0 { TODO !!! removed so that we can rollback to any height
+	//	valInfo.ValidatorSet = valSet
+	//}
+	valInfo.ValidatorSet = valSet
 	db.Set(calcValidatorsKey(height), valInfo.Bytes())
 }
 
@@ -434,4 +435,51 @@ func saveConsensusParamsInfo(db dbm.DB, nextHeight, changeHeight int64, params t
 		paramsInfo.ConsensusParams = params
 	}
 	db.Set(calcConsensusParamsKey(nextHeight), paramsInfo.Bytes())
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Added only for unsafe rollback feature
+
+func LoadValidatorsChanged(db dbm.DB, height int64) int64 {
+	buf, _ := db.Get(calcValidatorsKey(height))
+	if len(buf) == 0 {
+		return 0
+	}
+
+	v := new(ValidatorsInfo)
+	err := cdc.UnmarshalBinaryBare(buf, v)
+	if err != nil {
+		// DATA HAS BEEN CORRUPTED OR THE SPEC HAS CHANGED
+		tmos.Exit(fmt.Sprintf(`LoadValidators: Data has been corrupted or its spec has changed:
+                %v\n`, err))
+	}
+	// TODO: ensure that buf is completely read.
+
+	return v.LastHeightChanged
+}
+
+func LoadConsensusParamsChanged(db dbm.DB, height int64) int64 {
+	buf, _ := db.Get(calcConsensusParamsKey(height))
+	if len(buf) == 0 {
+		return 0
+	}
+
+	paramsInfo := new(ConsensusParamsInfo)
+	err := cdc.UnmarshalBinaryBare(buf, paramsInfo)
+	if err != nil {
+		// DATA HAS BEEN CORRUPTED OR THE SPEC HAS CHANGED
+		tmos.Exit(fmt.Sprintf(`LoadConsensusParams: Data has been corrupted or its spec has changed:
+                %v\n`, err))
+	}
+	// TODO: ensure that buf is completely read.
+
+	return paramsInfo.LastHeightChanged
+}
+func calSoftwareHeight(height int64) []byte {
+	return []byte(fmt.Sprintf("softwareKey:%v", height))
+}
+
+func LoadSoftware(db dbm.DB, height int64) string {
+	softwareByte, _ := db.Get(calSoftwareHeight(height))
+	return string(softwareByte)
 }

@@ -171,6 +171,10 @@ func (evpool *Pool) removeEvidence(
 	}
 }
 
+func (evpool *Pool) RollbackEvidence(height int64, latestHeight int64) {
+	evpool.store.DeleteEvidenceFromHeight(height, latestHeight)
+}
+
 func evMapKey(ev types.Evidence) string {
 	return string(ev.Hash())
 }

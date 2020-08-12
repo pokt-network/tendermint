@@ -48,6 +48,9 @@ func bE(h int64) string {
 }
 
 func keyLookupFromHeightAndHash(height int64, hash []byte) []byte {
+	if hash == nil {
+		return _key("%s/%s", baseKeyLookup, bE(height))
+	}
 	return _key("%s/%s/%X", baseKeyLookup, bE(height), hash)
 }
 
@@ -57,6 +60,13 @@ func keyOutqueue(evidence types.Evidence, priority int64) []byte {
 
 func keyPending(evidence types.Evidence) []byte {
 	return _key("%s/%s/%X", baseKeyPending, bE(evidence.Height()), evidence.Hash())
+}
+
+func keyPendingFromHeightAndHash(height int64, hash []byte) []byte {
+	if hash == nil {
+		return _key("%s/%s", baseKeyPending, bE(height))
+	}
+	return _key("%s/%s/%X", baseKeyPending, bE(height), hash)
 }
 
 func _key(format string, o ...interface{}) []byte {
@@ -138,6 +148,38 @@ func (store *Store) GetInfo(height int64, hash []byte) Info {
 		panic(err)
 	}
 	return ei
+}
+
+func (store *Store) DeleteOutqueueEvidence() {
+	iter, _ := dbm.IteratePrefix(store.db, []byte(baseKeyOutqueue))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.db.Delete(iter.Key())
+	}
+}
+
+func (store *Store) DeletePendingEvidence(height int64) {
+	iter, _ := dbm.IteratePrefix(store.db, keyPendingFromHeightAndHash(height, nil))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.db.Delete(iter.Key())
+	}
+}
+
+func (store *Store) DeleteLookupEvidence(height int64) {
+	iter, _ := dbm.IteratePrefix(store.db, keyLookupFromHeightAndHash(height, nil))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.db.Delete(iter.Key())
+	}
+}
+
+func (store *Store) DeleteEvidenceFromHeight(height int64, latestHeight int64) {
+	store.DeleteOutqueueEvidence()
+	for ; height <= latestHeight; height++ {
+		store.DeletePendingEvidence(height)
+		store.DeleteLookupEvidence(height)
+	}
 }
 
 // Has checks if the evidence is already stored

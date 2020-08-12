@@ -511,8 +511,9 @@ func ExecCommitBlock(
 	block *types.Block,
 	logger log.Logger,
 	stateDB dbm.DB,
+	indexer txindex.TxIndexer,
 ) ([]byte, error) {
-	_, err := execBlockOnProxyApp(logger, appConnConsensus, block, stateDB)
+	resp, err := execBlockOnProxyApp(logger, appConnConsensus, block, stateDB)
 	if err != nil {
 		logger.Error("Error executing block on proxy app", "height", block.Height, "err", err)
 		return nil, err
@@ -523,6 +524,21 @@ func ExecCommitBlock(
 		logger.Error("Client error during proxyAppConn.CommitSync", "err", res)
 		return nil, err
 	}
+	// create a new batch
+	b := txindex.NewBatch(int64(len(block.Txs)))
+	for i, tx := range block.Txs {
+		err := b.Add(&types.TxResult{
+			Height: block.Height,
+			Index:  uint32(i),
+			Tx:     tx,
+			Result: *(resp.DeliverTxs[i]),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	// update txIndexer
+	txindex.SyncTxIndexer(logger, indexer, b, block.Height)
 	// ResponseCommit has no error or log, just data
 	return res.Data, nil
 }
