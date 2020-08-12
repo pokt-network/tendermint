@@ -321,7 +321,7 @@ func createMempoolAndMempoolReactor(config *cfg.Config, proxyApp proxy.AppConns,
 	return mempoolReactor, mempool
 }
 
-func createEvidenceReactor(config *cfg.Config, dbProvider DBProvider,
+func CreateEvidenceReactor(config *cfg.Config, dbProvider DBProvider,
 	stateDB dbm.DB, logger log.Logger) (*evidence.Reactor, *evidence.Pool, error) {
 
 	evidenceDB, err := dbProvider(&DBContext{"evidence", config})
@@ -620,7 +620,7 @@ func NewNode(config *cfg.Config,
 	mempoolReactor, mempool := createMempoolAndMempoolReactor(config, proxyApp, state, memplMetrics, logger)
 
 	// Make Evidence Reactor
-	evidenceReactor, evidencePool, err := createEvidenceReactor(config, dbProvider, stateDB, logger)
+	evidenceReactor, evidencePool, err := CreateEvidenceReactor(config, dbProvider, stateDB, logger)
 	if err != nil {
 		return nil, err
 	}
