@@ -138,8 +138,9 @@ func (evpool *Pool) MarkEvidenceAsCommitted(height int64, lastBlockTime time.Tim
 	}
 
 	// remove committed evidence from the clist
-	evidenceParams := evpool.State().ConsensusParams.Evidence
-	evpool.removeEvidence(height, lastBlockTime, evidenceParams, blockEvidenceMap)
+	maxAge := evpool.State().ConsensusParams.Evidence.MaxAge
+	evpool.removeEvidence(height, maxAge, blockEvidenceMap)
+
 }
 
 // IsCommitted returns true if we have already seen this exact evidence and it is already marked as committed.
@@ -148,22 +149,14 @@ func (evpool *Pool) IsCommitted(evidence types.Evidence) bool {
 	return ei.Evidence != nil && ei.Committed
 }
 
-func (evpool *Pool) removeEvidence(
-	height int64,
-	lastBlockTime time.Time,
-	params types.EvidenceParams,
-	blockEvidenceMap map[string]struct{}) {
-
+func (evpool *Pool) removeEvidence(height, maxAge int64, blockEvidenceMap map[string]struct{}) {
 	for e := evpool.evidenceList.Front(); e != nil; e = e.Next() {
-		var (
-			ev           = e.Value.(types.Evidence)
-			ageDuration  = lastBlockTime.Sub(ev.Time())
-			ageNumBlocks = height - ev.Height()
-		)
+		ev := e.Value.(types.Evidence)
 
 		// Remove the evidence if it's already in a block or if it's now too old.
 		if _, ok := blockEvidenceMap[evMapKey(ev)]; ok ||
-			(ageDuration > params.MaxAgeDuration && ageNumBlocks > params.MaxAgeNumBlocks) {
+			ev.Height() < height-maxAge {
+
 			// remove from clist
 			evpool.evidenceList.Remove(e)
 			e.DetachPrev()

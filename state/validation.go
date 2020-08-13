@@ -159,22 +159,13 @@ func validateBlock(evidencePool EvidencePool, stateDB dbm.DB, state State, block
 // - it is internally consistent
 // - it was properly signed by the alleged equivocator
 func VerifyEvidence(stateDB dbm.DB, state State, evidence types.Evidence) error {
-	var (
-		height         = state.LastBlockHeight
-		evidenceParams = state.ConsensusParams.Evidence
+	height := state.LastBlockHeight
 
-		ageDuration  = state.LastBlockTime.Sub(evidence.Time())
-		ageNumBlocks = height - evidence.Height()
-	)
-
-	if ageDuration > evidenceParams.MaxAgeDuration && ageNumBlocks > evidenceParams.MaxAgeNumBlocks {
-		return fmt.Errorf(
-			"evidence from height %d (created at: %v) is too old; min height is %d and evidence can not be older than %v",
-			evidence.Height(),
-			evidence.Time(),
-			height-evidenceParams.MaxAgeNumBlocks,
-			state.LastBlockTime.Add(evidenceParams.MaxAgeDuration),
-		)
+	evidenceAge := height - evidence.Height()
+	maxAge := state.ConsensusParams.Evidence.MaxAge
+	if evidenceAge > maxAge {
+		return fmt.Errorf("Evidence from height %d is too old. Min height is %d",
+			evidence.Height(), height-maxAge)
 	}
 
 	valset, err := LoadValidators(stateDB, evidence.Height())
