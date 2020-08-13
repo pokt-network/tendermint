@@ -692,7 +692,7 @@ func (vals *ValidatorSet) VerifyCommit(chainID string, blockID BlockID,
 	talliedVotingPower := int64(0)
 	votingPowerNeeded := vals.TotalVotingPower() * 2 / 3
 	for idx, commitSig := range commit.Precommits {
-		if commitSig != nil {
+		if commitSig == nil {
 			continue // OK, some signatures can be absent.
 		}
 
@@ -750,7 +750,7 @@ func (vals *ValidatorSet) VerifyCommitLight(chainID string, blockID BlockID,
 	votingPowerNeeded := vals.TotalVotingPower() * 2 / 3
 	for idx, commitSig := range commit.Precommits {
 		// No need to verify absent or nil votes.
-		if commitSig.Signature == nil {
+		if commitSig == nil {
 			continue
 		}
 
@@ -819,7 +819,7 @@ func (vals *ValidatorSet) VerifyFutureCommit(newSet *ValidatorSet, chainID strin
 	seen := map[int]bool{}
 
 	for idx, commitSig := range commit.Precommits {
-		if commitSig.Signature == nil {
+		if commitSig == nil {
 			continue // OK, some signatures can be absent.
 		}
 
@@ -888,7 +888,7 @@ func (vals *ValidatorSet) VerifyCommitLightTrusting(chainID string, blockID Bloc
 
 	for idx, commitSig := range commit.Precommits {
 		// No need to verify absent or nil votes.
-		if commitSig.Signature == nil {
+		if commitSig == nil {
 			continue
 		}
 
