@@ -58,24 +58,26 @@ message Header {
   string                             chain_id = 2 [(gogoproto.customname) = "ChainID"];
   int64                              height   = 3;
   google.protobuf.Timestamp          time     = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  int64                               num_txs = 5;
+  int64                             total_txs = 6;
 
   // prev block info
-  BlockID last_block_id = 5 [(gogoproto.nullable) = false, (gogoproto.customname) = "LastBlockID"];
+  BlockID last_block_id = 7 [(gogoproto.nullable) = false, (gogoproto.customname) = "LastBlockID"];
 
   // hashes of block data
-  bytes last_commit_hash = 6;  // commit from validators from the last block
-  bytes data_hash        = 7;  // transactions
+  bytes last_commit_hash = 8;  // commit from validators from the last block
+  bytes data_hash        = 9;  // transactions
 
   // hashes from the app output from the prev block
-  bytes validators_hash      = 8;   // validators for the current block
-  bytes next_validators_hash = 9;   // validators for the next block
-  bytes consensus_hash       = 10;  // consensus params for current block
-  bytes app_hash             = 11;  // state after txs from the previous block
-  bytes last_results_hash    = 12;  // root hash of all results from the txs from the previous block
+  bytes validators_hash      = 10;   // validators for the current block
+  bytes next_validators_hash = 11;   // validators for the next block
+  bytes consensus_hash       = 12;  // consensus params for current block
+  bytes app_hash             = 13;  // state after txs from the previous block
+  bytes last_results_hash    = 14;  // root hash of all results from the txs from the previous block
 
   // consensus info
-  bytes evidence_hash    = 13;  // evidence included in the block
-  bytes proposer_address = 14;  // original proposer of the block
+  bytes evidence_hash    = 15;  // evidence included in the block
+  bytes proposer_address = 16;  // original proposer of the block
 }
 
 // Data contains the set of transactions included in the block
@@ -108,18 +110,23 @@ message Commit {
   int64                               height     = 1;
   int32                               round      = 2;
   BlockID                             block_id   = 3 [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"];
-  repeated CommitSig                  signatures = 4 [(gogoproto.nullable) = false];
+  repeated CommitSig                  precommits = 4 [(gogoproto.nullable) = false];
   bytes                               hash       = 5;
   tendermint.proto.libs.bits.BitArray bit_array  = 6;
 }
 
 // CommitSig is a part of the Vote included in a Commit.
 message CommitSig {
-  BlockIDFlag               block_id_flag     = 1;
-  bytes                     validator_address = 2;
-  google.protobuf.Timestamp timestamp         = 3
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  bytes signature = 4;
+  SignedMsgType type     = 1;
+  int64         height   = 2;
+  int64         round    = 3;
+  BlockID       block_id = 4
+  [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"];  // zero if vote is nil.
+  google.protobuf.Timestamp timestamp = 5
+  [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  bytes validator_address = 6;
+  int64 validator_index   = 7;
+  bytes signature         = 8;
 }
 
 message Proposal {

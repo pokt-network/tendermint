@@ -55,9 +55,10 @@ type State struct {
 	ChainID string
 
 	// LastBlockHeight=0 at genesis (ie. block(H=0) does not exist)
-	LastBlockHeight int64
-	LastBlockID     types.BlockID
-	LastBlockTime   time.Time
+	LastBlockHeight  int64
+	LastBlockTotalTx int64
+	LastBlockID      types.BlockID
+	LastBlockTime    time.Time
 
 	// LastValidators is used to validate block.LastCommit.
 	// Validators are persisted to the database separately every time they change,
@@ -88,9 +89,10 @@ func (state State) Copy() State {
 		Version: state.Version,
 		ChainID: state.ChainID,
 
-		LastBlockHeight: state.LastBlockHeight,
-		LastBlockID:     state.LastBlockID,
-		LastBlockTime:   state.LastBlockTime,
+		LastBlockHeight:  state.LastBlockHeight,
+		LastBlockTotalTx: state.LastBlockTotalTx,
+		LastBlockID:      state.LastBlockID,
+		LastBlockTime:    state.LastBlockTime,
 
 		NextValidators:              state.NextValidators.Copy(),
 		Validators:                  state.Validators.Copy(),
@@ -150,7 +152,7 @@ func (state State) MakeBlock(
 	// Fill rest of header with state data.
 	block.Header.Populate(
 		state.Version.Consensus, state.ChainID,
-		timestamp, state.LastBlockID,
+		timestamp, state.LastBlockID, state.LastBlockTotalTx+block.NumTxs,
 		state.Validators.Hash(), state.NextValidators.Hash(),
 		state.ConsensusParams.Hash(), state.AppHash, state.LastResultsHash,
 		proposerAddress,
@@ -164,11 +166,11 @@ func (state State) MakeBlock(
 // the votes sent by honest processes, i.e., a faulty processes can not arbitrarily increase or decrease the
 // computed value.
 func MedianTime(commit *types.Commit, validators *types.ValidatorSet) time.Time {
-	weightedTimes := make([]*tmtime.WeightedTime, len(commit.Signatures))
+	weightedTimes := make([]*tmtime.WeightedTime, len(commit.Precommits))
 	totalVotingPower := int64(0)
 
-	for i, commitSig := range commit.Signatures {
-		if commitSig.Absent() {
+	for i, commitSig := range commit.Precommits {
+		if commitSig == nil {
 			continue
 		}
 		_, validator := validators.GetByAddress(commitSig.ValidatorAddress)

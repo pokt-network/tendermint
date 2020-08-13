@@ -350,14 +350,14 @@ func getBeginBlockValidatorInfo(block *types.Block, stateDB dbm.DB) (abci.LastCo
 		)
 		if commitSize != valSetLen {
 			panic(fmt.Sprintf("commit size (%d) doesn't match valset length (%d) at height %d\n\n%v\n\n%v",
-				commitSize, valSetLen, block.Height, block.LastCommit.Signatures, lastValSet.Validators))
+				commitSize, valSetLen, block.Height, block.LastCommit.Precommits, lastValSet.Validators))
 		}
 
 		for i, val := range lastValSet.Validators {
-			commitSig := block.LastCommit.Signatures[i]
+			commitSig := block.LastCommit.Precommits[i]
 			voteInfos[i] = abci.VoteInfo{
 				Validator:       types.TM2PB.Validator(val),
-				SignedLastBlock: !commitSig.Absent(),
+				SignedLastBlock: commitSig != nil,
 			}
 		}
 	}
@@ -375,7 +375,7 @@ func getBeginBlockValidatorInfo(block *types.Block, stateDB dbm.DB) (abci.LastCo
 	}
 
 	return abci.LastCommitInfo{
-		Round: int32(block.LastCommit.Round),
+		Round: int32(block.LastCommit.Round()),
 		Votes: voteInfos,
 	}, byzVals
 }

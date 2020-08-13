@@ -58,27 +58,13 @@ type Vote struct {
 }
 
 // CommitSig converts the Vote to a CommitSig.
-func (vote *Vote) CommitSig() CommitSig {
+// If the Vote is nil, the CommitSig will be nil.
+func (vote *Vote) CommitSig() *CommitSig {
 	if vote == nil {
-		return NewCommitSigAbsent()
+		return nil
 	}
-
-	var blockIDFlag BlockIDFlag
-	switch {
-	case vote.BlockID.IsComplete():
-		blockIDFlag = BlockIDFlagCommit
-	case vote.BlockID.IsZero():
-		blockIDFlag = BlockIDFlagNil
-	default:
-		panic(fmt.Sprintf("Invalid vote %v - expected BlockID to be either empty or complete", vote))
-	}
-
-	return CommitSig{
-		BlockIDFlag:      blockIDFlag,
-		ValidatorAddress: vote.ValidatorAddress,
-		Timestamp:        vote.Timestamp,
-		Signature:        vote.Signature,
-	}
+	cs := CommitSig(*vote)
+	return &cs
 }
 
 func (vote *Vote) SignBytes(chainID string) []byte {

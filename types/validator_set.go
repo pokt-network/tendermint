@@ -682,8 +682,8 @@ func (vals *ValidatorSet) UpdateWithChangeSet(changes []*Validator) error {
 func (vals *ValidatorSet) VerifyCommit(chainID string, blockID BlockID,
 	height int64, commit *Commit) error {
 
-	if vals.Size() != len(commit.Signatures) {
-		return NewErrInvalidCommitSignatures(vals.Size(), len(commit.Signatures))
+	if vals.Size() != len(commit.Precommits) {
+		return NewErrInvalidCommitSignatures(vals.Size(), len(commit.Precommits))
 	}
 	if err := verifyCommitBasic(commit, height, blockID); err != nil {
 		return err
@@ -691,8 +691,8 @@ func (vals *ValidatorSet) VerifyCommit(chainID string, blockID BlockID,
 
 	talliedVotingPower := int64(0)
 	votingPowerNeeded := vals.TotalVotingPower() * 2 / 3
-	for idx, commitSig := range commit.Signatures {
-		if commitSig.Absent() {
+	for idx, commitSig := range commit.Precommits {
+		if commitSig != nil {
 			continue // OK, some signatures can be absent.
 		}
 
@@ -706,7 +706,7 @@ func (vals *ValidatorSet) VerifyCommit(chainID string, blockID BlockID,
 			return fmt.Errorf("wrong signature (#%d): %X", idx, commitSig.Signature)
 		}
 		// Good!
-		if blockID.Equals(commitSig.BlockID(commit.BlockID)) {
+		if blockID.Equals(commit.BlockID) {
 			talliedVotingPower += val.VotingPower
 		}
 		// else {
@@ -733,13 +733,13 @@ func (vals *ValidatorSet) VerifyCommit(chainID string, blockID BlockID,
 func (vals *ValidatorSet) VerifyCommitLight(chainID string, blockID BlockID,
 	height int64, commit *Commit) error {
 
-	if vals.Size() != len(commit.Signatures) {
-		return NewErrInvalidCommitSignatures(vals.Size(), len(commit.Signatures))
+	if vals.Size() != len(commit.Precommits) {
+		return NewErrInvalidCommitSignatures(vals.Size(), len(commit.Precommits))
 	}
 
 	// Validate Height and BlockID.
-	if height != commit.Height {
-		return NewErrInvalidCommitHeight(height, commit.Height)
+	if height != commit.Height() {
+		return NewErrInvalidCommitHeight(height, commit.Height())
 	}
 	if !blockID.Equals(commit.BlockID) {
 		return fmt.Errorf("invalid commit -- wrong block ID: want %v, got %v",
@@ -748,9 +748,9 @@ func (vals *ValidatorSet) VerifyCommitLight(chainID string, blockID BlockID,
 
 	talliedVotingPower := int64(0)
 	votingPowerNeeded := vals.TotalVotingPower() * 2 / 3
-	for idx, commitSig := range commit.Signatures {
+	for idx, commitSig := range commit.Precommits {
 		// No need to verify absent or nil votes.
-		if !commitSig.ForBlock() {
+		if commitSig.Signature == nil {
 			continue
 		}
 
@@ -818,8 +818,8 @@ func (vals *ValidatorSet) VerifyFutureCommit(newSet *ValidatorSet, chainID strin
 	oldVotingPower := int64(0)
 	seen := map[int]bool{}
 
-	for idx, commitSig := range commit.Signatures {
-		if commitSig.Absent() {
+	for idx, commitSig := range commit.Precommits {
+		if commitSig.Signature == nil {
 			continue // OK, some signatures can be absent.
 		}
 
@@ -836,7 +836,7 @@ func (vals *ValidatorSet) VerifyFutureCommit(newSet *ValidatorSet, chainID strin
 			return errors.Errorf("wrong signature (#%d): %X", idx, commitSig.Signature)
 		}
 		// Good!
-		if blockID.Equals(commitSig.BlockID(commit.BlockID)) {
+		if blockID.Equals(commitSig.BlockID) {
 			oldVotingPower += val.VotingPower
 		}
 		// else {
@@ -876,7 +876,7 @@ func (vals *ValidatorSet) VerifyCommitLightTrusting(chainID string, blockID Bloc
 
 	var (
 		talliedVotingPower int64
-		seenVals           = make(map[int]int, len(commit.Signatures)) // validator index -> commit index
+		seenVals           = make(map[int]int, len(commit.Precommits)) // validator index -> commit index
 	)
 
 	// Safely calculate voting power needed.
@@ -886,9 +886,9 @@ func (vals *ValidatorSet) VerifyCommitLightTrusting(chainID string, blockID Bloc
 	}
 	votingPowerNeeded := totalVotingPowerMulByNumerator / trustLevel.Denominator
 
-	for idx, commitSig := range commit.Signatures {
+	for idx, commitSig := range commit.Precommits {
 		// No need to verify absent or nil votes.
-		if !commitSig.ForBlock() {
+		if commitSig.Signature == nil {
 			continue
 		}
 
@@ -925,8 +925,8 @@ func verifyCommitBasic(commit *Commit, height int64, blockID BlockID) error {
 	if err := commit.ValidateBasic(); err != nil {
 		return err
 	}
-	if height != commit.Height {
-		return NewErrInvalidCommitHeight(height, commit.Height)
+	if height != commit.Height() {
+		return NewErrInvalidCommitHeight(height, commit.Height())
 	}
 	if !blockID.Equals(commit.BlockID) {
 		return fmt.Errorf("invalid commit -- wrong block ID: want %v, got %v",

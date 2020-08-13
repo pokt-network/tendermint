@@ -808,7 +808,7 @@ OUTER_LOOP:
 				if commit := conR.conS.LoadCommit(prs.Height); commit != nil {
 					peer.TrySend(StateChannel, cdc.MustMarshalBinaryBare(&VoteSetMaj23Message{
 						Height:  prs.Height,
-						Round:   commit.Round,
+						Round:   commit.Round(),
 						Type:    types.PrecommitType,
 						BlockID: commit.BlockID,
 					}))

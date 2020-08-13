@@ -1024,7 +1024,7 @@ func (cs *State) createProposalBlock() (block *types.Block, blockParts *types.Pa
 	case cs.Height == 1:
 		// We're creating a proposal for the first block.
 		// The commit is empty, but not nil.
-		commit = types.NewCommit(0, 0, types.BlockID{}, nil)
+		commit = types.NewCommit(types.BlockID{}, nil)
 	case cs.LastCommit.HasTwoThirdsMajority():
 		// Make the commit from LastCommit
 		commit = cs.LastCommit.MakeCommit()
@@ -1527,12 +1527,12 @@ func (cs *State) recordMetrics(height int64, block *types.Block) {
 		)
 		if commitSize != valSetLen {
 			panic(fmt.Sprintf("commit size (%d) doesn't match valset length (%d) at height %d\n\n%v\n\n%v",
-				commitSize, valSetLen, block.Height, block.LastCommit.Signatures, cs.LastValidators.Validators))
+				commitSize, valSetLen, block.Height, block.LastCommit.Precommits, cs.LastValidators.Validators))
 		}
 
 		for i, val := range cs.LastValidators.Validators {
-			commitSig := block.LastCommit.Signatures[i]
-			if commitSig.Absent() {
+			commitSig := block.LastCommit.Precommits[i]
+			if commitSig == nil {
 				missingValidators++
 				missingValidatorsPower += val.VotingPower
 			}
@@ -1550,7 +1550,7 @@ func (cs *State) recordMetrics(height int64, block *types.Block) {
 						"validator_address", val.Address.String(),
 					}
 					cs.metrics.ValidatorPower.With(label...).Set(float64(val.VotingPower))
-					if commitSig.ForBlock() {
+					if commitSig != nil {
 						cs.metrics.ValidatorLastSignedHeight.With(label...).Set(float64(height))
 					} else {
 						cs.metrics.ValidatorMissedBlocks.With(label...).Add(float64(1))
@@ -1580,8 +1580,8 @@ func (cs *State) recordMetrics(height int64, block *types.Block) {
 		}
 	}
 
-	cs.metrics.NumTxs.Set(float64(len(block.Data.Txs)))
-	cs.metrics.TotalTxs.Add(float64(len(block.Data.Txs)))
+	cs.metrics.NumTxs.Set(float64(block.NumTxs))
+	cs.metrics.TotalTxs.Add(float64(block.TotalTxs))
 	cs.metrics.BlockSizeBytes.Set(float64(block.Size()))
 	cs.metrics.CommittedHeight.Set(float64(block.Height))
 }
