@@ -58,7 +58,6 @@ func (err *ErrEvidenceOverflow) Error() string {
 // Evidence represents any provable malicious activity by a validator
 type Evidence interface {
 	Height() int64                                     // height of the equivocation
-	Time() time.Time                                   // time of the equivocation
 	Address() []byte                                   // address of the equivocating validator
 	Bytes() []byte                                     // bytes which comprise the evidence
 	Hash() []byte                                      // hash of the evidence
@@ -250,11 +249,6 @@ func (dve *DuplicateVoteEvidence) Height() int64 {
 	return dve.VoteA.Height
 }
 
-// Time return the time the evidence was created
-func (dve *DuplicateVoteEvidence) Time() time.Time {
-	return dve.VoteA.Timestamp
-}
-
 // Address returns the address of the validator.
 func (dve *DuplicateVoteEvidence) Address() []byte {
 	return dve.PubKey.Address()
@@ -333,7 +327,6 @@ func (dve *DuplicateVoteEvidence) Equal(ev Evidence) bool {
 	// just check their hashes
 	dveHash := tmhash.Sum(cdcEncode(dve))
 	evHash := tmhash.Sum(cdcEncode(ev))
-	fmt.Println(dveHash, evHash)
 	return bytes.Equal(dveHash, evHash)
 }
 
@@ -349,11 +342,7 @@ func (dve *DuplicateVoteEvidence) ValidateBasic() error {
 		return fmt.Errorf("invalid VoteA: %v", err)
 	}
 	if err := dve.VoteB.ValidateBasic(); err != nil {
-		return fmt.Errorf("invalid VoteB: %v", err)
-	}
-	// Enforce Votes are lexicographically sorted on blockID
-	if strings.Compare(dve.VoteA.BlockID.Key(), dve.VoteB.BlockID.Key()) >= 0 {
-		return errors.New("duplicate votes in invalid order")
+		return fmt.Errorf("Invalid VoteB: %v", err)
 	}
 	return nil
 }
