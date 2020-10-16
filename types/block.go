@@ -513,6 +513,8 @@ func (h *Header) ToProto() *tmproto.Header {
 		LastResultsHash:    h.LastResultsHash,
 		LastCommitHash:     h.LastCommitHash,
 		ProposerAddress:    h.ProposerAddress,
+		TotalTxs:           h.TotalTxs,
+		NumTxs:             h.NumTxs,
 	}
 }
 
@@ -545,6 +547,8 @@ func HeaderFromProto(ph *tmproto.Header) (Header, error) {
 	h.LastResultsHash = ph.LastResultsHash
 	h.LastCommitHash = ph.LastCommitHash
 	h.ProposerAddress = ph.ProposerAddress
+	h.NumTxs = ph.NumTxs
+	h.TotalTxs = ph.TotalTxs
 
 	return *h, h.ValidateBasic()
 }

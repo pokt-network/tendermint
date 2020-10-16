@@ -70,10 +70,7 @@ func (pkz privKeys) ToValidators(init, inc int64) *types.ValidatorSet {
 
 // signHeader properly signs the header with all keys from first to last exclusive.
 func (pkz privKeys) signHeader(header *types.Header, first, last int) *types.Commit {
-	commitSigs := make([]types.CommitSig, len(pkz))
-	for i := 0; i < len(pkz); i++ {
-		commitSigs[i] = types.NewCommitSigAbsent()
-	}
+	commitSigs := make([]*types.CommitSig, len(pkz))
 
 	// We need this list to keep the ordering.
 	vset := pkz.ToValidators(1, 0)
@@ -88,8 +85,8 @@ func (pkz privKeys) signHeader(header *types.Header, first, last int) *types.Com
 		vote := makeVote(header, vset, pkz[i], blockID)
 		commitSigs[vote.ValidatorIndex] = vote.CommitSig()
 	}
-
-	return types.NewCommit(header.Height, 1, blockID, commitSigs)
+	//blockID := types.BlockID{Hash: header.Hash()}
+	return types.NewCommit(blockID, commitSigs)
 }
 
 func makeVote(header *types.Header, valset *types.ValidatorSet, key crypto.PrivKey, blockID types.BlockID) *types.Vote {
@@ -120,9 +117,11 @@ func genHeader(chainID string, height int64, txs types.Txs,
 	valset, nextValset *types.ValidatorSet, appHash, consHash, resHash []byte) *types.Header {
 
 	return &types.Header{
-		ChainID: chainID,
-		Height:  height,
-		Time:    tmtime.Now(),
+		ChainID:  chainID,
+		Height:   height,
+		Time:     tmtime.Now(),
+		NumTxs:   int64(len(txs)),
+		TotalTxs: int64(len(txs)),
 		// LastBlockID
 		// LastCommitHash
 		ValidatorsHash:     valset.Hash(),
