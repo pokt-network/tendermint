@@ -222,7 +222,7 @@ type Message interface {
 func RegisterMessages(cdc *amino.Codec) {
 	cdc.RegisterInterface((*Message)(nil), nil)
 	cdc.RegisterConcrete(&ListMessage{},
-		"tendermint/evidence/ListMessage", nil)
+		"tendermint/evidence/EvidenceListMessage", nil)
 }
 
 func decodeMsg(bz []byte) (msg Message, err error) {
