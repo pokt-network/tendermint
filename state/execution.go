@@ -451,6 +451,7 @@ func updateState(
 		Version:                          nextVersion,
 		ChainID:                          state.ChainID,
 		LastBlockHeight:                  header.Height,
+		LastBlockTotalTx:                 state.LastBlockTotalTx + header.NumTxs,
 		LastBlockID:                      blockID,
 		LastBlockTime:                    header.Time,
 		NextValidators:                   nValSet,

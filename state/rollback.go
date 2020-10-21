@@ -104,6 +104,7 @@ func RestoreStateFromBlock(stateDb db.DB, blockStore *store.BlockStore, rollback
 		LastBlockID:                 nextBlock.LastBlockID, //? true
 		LastBlockHeight:             block.Height,
 		LastBlockTime:               block.Time,
+		LastBlockTotalTx:            block.TotalTxs,
 		NextValidators:              nextvalidator.Copy(),
 		Validators:                  validator.Copy(),
 		LastValidators:              lastvalidator.Copy(),
