@@ -15,7 +15,7 @@ import "google/protobuf/timestamp.proto";
 // of the various ABCI calls during block processing.
 // It is persisted to disk for each height before calling Commit.
 message ABCIResponses {
-  repeated tendermint.abci.types.ResponseDeliverTx deliver_txs = 1;
+  repeated tendermint.abci.types.ResponseDeliverTx deliver_tx = 1;
   tendermint.abci.types.ResponseEndBlock           end_block   = 2;
   tendermint.abci.types.ResponseBeginBlock         begin_block = 3;
 }
