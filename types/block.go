@@ -80,6 +80,15 @@ func (b *Block) ValidateBasic() error {
 		)
 	}
 
+	// NOTE: Timestamp validation is subtle and handled elsewhere.
+	newTxs := int64(len(b.Data.Txs))
+	if b.NumTxs != newTxs {
+		return fmt.Errorf("Wrong Header.NumTxs. Expected %v, got %v",
+			newTxs,
+			b.NumTxs,
+		)
+	}
+
 	// Validate the hash of the transactions.
 	// NOTE: b.Data.Txs may be nil, but b.Data.Hash()
 	// still works fine
