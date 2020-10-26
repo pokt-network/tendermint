@@ -120,7 +120,7 @@ func saveState(db dbm.DB, state State, key []byte) {
 // of the various ABCI calls during block processing.
 // It is persisted to disk for each height before calling Commit.
 type ABCIResponses struct {
-	DeliverTxs []*abci.ResponseDeliverTx `json:"deliver_txs"`
+	DeliverTx  []*abci.ResponseDeliverTx `json:"deliver_tx"`
 	EndBlock   *abci.ResponseEndBlock    `json:"end_block"`
 	BeginBlock *abci.ResponseBeginBlock  `json:"begin_block"`
 }
@@ -229,7 +229,7 @@ func NewABCIResponses(block *types.Block) *ABCIResponses {
 		resDeliverTxs = nil
 	}
 	return &ABCIResponses{
-		DeliverTxs: resDeliverTxs,
+		DeliverTx: resDeliverTxs,
 	}
 }
 
@@ -239,7 +239,7 @@ func (arz *ABCIResponses) Bytes() []byte {
 }
 
 func (arz *ABCIResponses) ResultsHash() []byte {
-	results := types.NewResults(arz.DeliverTxs)
+	results := types.NewResults(arz.DeliverTx)
 	return results.Hash()
 }
 

@@ -52,8 +52,8 @@ func (is *IndexerService) OnStart() error {
 	go func() {
 		for {
 			msg := <-blockHeadersSub.Out()
-			eventDataHeader := msg.Data().(types.EventDataNewBlockHeader)
-			height := eventDataHeader.Header.Height
+			eventDataHeader := msg.Data().(types.EventDataNewBlockHeader).Header
+			height := eventDataHeader.Height
 			batch := NewBatch(eventDataHeader.NumTxs)
 			for i := int64(0); i < eventDataHeader.NumTxs; i++ {
 				msg2 := <-txsSub.Out()

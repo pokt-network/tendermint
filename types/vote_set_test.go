@@ -586,8 +586,8 @@ func TestMakeCommit(t *testing.T) {
 	commit := voteSet.MakeCommit()
 
 	// Commit should have 10 elements
-	if len(commit.Signatures) != 10 {
-		t.Errorf("expected commit to include %d elems, got %d", 10, len(commit.Signatures))
+	if len(commit.Precommits) != 10 {
+		t.Errorf("expected commit to include %d elems, got %d", 10, len(commit.Precommits))
 	}
 
 	// Ensure that Commit is good.

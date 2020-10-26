@@ -172,7 +172,7 @@ func (blockExec *BlockExecutor) ApplyBlock(
 	}
 
 	// Lock mempool, commit app state, update mempoool.
-	appHash, retainHeight, err := blockExec.Commit(state, block, abciResponses.DeliverTxs)
+	appHash, retainHeight, err := blockExec.Commit(state, block, abciResponses.DeliverTx)
 	if err != nil {
 		return state, 0, fmt.Errorf("commit failed for application: %v", err)
 	}
@@ -231,7 +231,7 @@ func (blockExec *BlockExecutor) Commit(
 	blockExec.logger.Info(
 		"Committed state",
 		"height", block.Height,
-		"txs", len(block.Txs),
+		"txs", block.NumTxs,
 		"appHash", fmt.Sprintf("%X", res.Data),
 	)
 
@@ -244,7 +244,7 @@ func (blockExec *BlockExecutor) Commit(
 		TxPostCheck(state),
 	)
 	// create a new batch
-	b := txindex.NewBatch(int64(len(block.Txs)))
+	b := txindex.NewBatch(block.NumTxs)
 	for i, tx := range block.Txs {
 		err := b.Add(&types.TxResult{
 			Height: block.Height,
@@ -290,7 +290,7 @@ func execBlockOnProxyApp(
 				logger.Debug("Invalid tx", "code", txRes.Code, "log", txRes.Log)
 				invalidTxs++
 			}
-			abciResponses.DeliverTxs[txIndex] = txRes
+			abciResponses.DeliverTx[txIndex] = txRes
 			txIndex++
 		}
 	}
@@ -492,7 +492,7 @@ func fireEvents(
 			Height: block.Height,
 			Index:  uint32(i),
 			Tx:     tx,
-			Result: *(abciResponses.DeliverTxs[i]),
+			Result: *(abciResponses.DeliverTx[i]),
 		}})
 	}
 
@@ -526,13 +526,13 @@ func ExecCommitBlock(
 		return nil, err
 	}
 	// create a new batch
-	b := txindex.NewBatch(int64(len(block.Txs)))
+	b := txindex.NewBatch(block.NumTxs)
 	for i, tx := range block.Txs {
 		err := b.Add(&types.TxResult{
 			Height: block.Height,
 			Index:  uint32(i),
 			Tx:     tx,
-			Result: *(resp.DeliverTxs[i]),
+			Result: *(resp.DeliverTx[i]),
 		})
 		if err != nil {
 			return nil, err

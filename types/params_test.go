@@ -2,11 +2,9 @@ package types
 
 import (
 	"bytes"
+	"github.com/stretchr/testify/assert"
 	"sort"
 	"testing"
-	"time"
-
-	"github.com/stretchr/testify/assert"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -61,8 +59,7 @@ func makeParams(
 			TimeIotaMs: blockTimeIotaMs,
 		},
 		Evidence: EvidenceParams{
-			MaxAgeNumBlocks: evidenceAge,
-			MaxAgeDuration:  time.Duration(evidenceAge),
+			MaxAge: evidenceAge,
 		},
 		Validator: ValidatorParams{
 			PubKeyTypes: pubkeyTypes,
@@ -118,8 +115,7 @@ func TestConsensusParamsUpdate(t *testing.T) {
 					MaxGas:   200,
 				},
 				Evidence: &abci.EvidenceParams{
-					MaxAgeNumBlocks: 300,
-					MaxAgeDuration:  time.Duration(300),
+					MaxAge: 300,
 				},
 				Validator: &abci.ValidatorParams{
 					PubKeyTypes: valSecp256k1,

@@ -71,8 +71,9 @@ func TestBlockValidateBasic(t *testing.T) {
 		{"Make Block", func(blk *Block) {}, false},
 		{"Make Block w/ proposer Addr", func(blk *Block) { blk.ProposerAddress = valSet.GetProposer().Address }, false},
 		{"Negative Height", func(blk *Block) { blk.Height = -1 }, true},
+		{"Increase NumTxs", func(blk *Block) { blk.NumTxs++ }, true},
 		{"Remove 1/2 the commits", func(blk *Block) {
-			blk.LastCommit.Signatures = commit.Signatures[:commit.Size()/2]
+			blk.LastCommit.Precommits = commit.Precommits[:commit.Size()/2]
 			blk.LastCommit.hash = nil // clear hash or change wont be noticed
 		}, true},
 		{"Remove LastCommitHash", func(blk *Block) { blk.LastCommitHash = []byte("something else") }, true},
@@ -213,8 +214,8 @@ func TestCommit(t *testing.T) {
 	commit, err := MakeCommit(lastID, h-1, 1, voteSet, vals, time.Now())
 	require.NoError(t, err)
 
-	assert.Equal(t, h-1, commit.Height)
-	assert.Equal(t, 1, commit.Round)
+	assert.Equal(t, h-1, commit.Height())
+	assert.Equal(t, 1, commit.Round())
 	assert.Equal(t, PrecommitType, SignedMsgType(commit.Type()))
 	if commit.Size() <= 0 {
 		t.Fatalf("commit %v has a zero or negative size: %d", commit, commit.Size())
@@ -234,9 +235,11 @@ func TestCommitValidateBasic(t *testing.T) {
 		expectErr      bool
 	}{
 		{"Random Commit", func(com *Commit) {}, false},
-		{"Incorrect signature", func(com *Commit) { com.Signatures[0].Signature = []byte{0} }, false},
-		{"Incorrect height", func(com *Commit) { com.Height = int64(-100) }, true},
-		{"Incorrect round", func(com *Commit) { com.Round = -100 }, true},
+		{"Nil precommit", func(com *Commit) { com.Precommits[0] = nil }, false},
+		{"Incorrect signature", func(com *Commit) { com.Precommits[0].Signature = []byte{0} }, false},
+		{"Incorrect type", func(com *Commit) { com.Precommits[0].Type = PrevoteType }, true},
+		{"Incorrect height", func(com *Commit) { com.Precommits[0].Height = int64(100) }, true},
+		{"Incorrect round", func(com *Commit) { com.Precommits[0].Round = 100 }, true},
 	}
 	for _, tc := range testCases {
 		tc := tc
@@ -259,6 +262,8 @@ func TestHeaderHash(t *testing.T) {
 			ChainID:            "chainId",
 			Height:             3,
 			Time:               time.Date(2019, 10, 13, 16, 14, 44, 0, time.UTC),
+			NumTxs:             4,
+			TotalTxs:           5,
 			LastBlockID:        makeBlockID(make([]byte, tmhash.Size), 6, make([]byte, tmhash.Size)),
 			LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 			DataHash:           tmhash.Sum([]byte("data_hash")),
@@ -269,13 +274,15 @@ func TestHeaderHash(t *testing.T) {
 			LastResultsHash:    tmhash.Sum([]byte("last_results_hash")),
 			EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
 			ProposerAddress:    crypto.AddressHash([]byte("proposer_address")),
-		}, hexBytesFromString("ABDC78921B18A47EE6BEF5E31637BADB0F3E587E3C0F4DB2D1E93E9FF0533862")},
+		}, hexBytesFromString("A37A7A69D89D3A66D599B0914A53F959EFE490EE9B449C95852F6FB331D58D07")},
 		{"nil header yields nil", nil, nil},
 		{"nil ValidatorsHash yields nil", &Header{
 			Version:            version.Consensus{Block: 1, App: 2},
 			ChainID:            "chainId",
 			Height:             3,
 			Time:               time.Date(2019, 10, 13, 16, 14, 44, 0, time.UTC),
+			NumTxs:             4,
+			TotalTxs:           5,
 			LastBlockID:        makeBlockID(make([]byte, tmhash.Size), 6, make([]byte, tmhash.Size)),
 			LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 			DataHash:           tmhash.Sum([]byte("data_hash")),
@@ -330,6 +337,8 @@ func TestMaxHeaderBytes(t *testing.T) {
 		ChainID:            maxChainID,
 		Height:             math.MaxInt64,
 		Time:               timestamp,
+		NumTxs:             math.MaxInt64,
+		TotalTxs:           math.MaxInt64,
 		LastBlockID:        makeBlockID(make([]byte, tmhash.Size), math.MaxInt64, make([]byte, tmhash.Size)),
 		LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 		DataHash:           tmhash.Sum([]byte("data_hash")),
@@ -377,9 +386,9 @@ func TestBlockMaxDataBytes(t *testing.T) {
 	}{
 		0: {-10, 1, 0, true, 0},
 		1: {10, 1, 0, true, 0},
-		2: {865, 1, 0, true, 0},
-		3: {866, 1, 0, false, 0},
-		4: {867, 1, 0, false, 1},
+		2: {886, 1, 0, true, 0},
+		3: {887, 1, 0, false, 0},
+		4: {888, 1, 0, false, 1},
 	}
 
 	for i, tc := range testCases {
@@ -452,6 +461,8 @@ func TestCommitToVoteSet(t *testing.T) {
 
 func TestCommitToVoteSetWithVotesForNilBlock(t *testing.T) {
 	blockID := makeBlockID([]byte("blockhash"), 1000, []byte("partshash"))
+	blockID2 := makeBlockID([]byte("blockhash2"), 1000, []byte("partshash"))
+	blockID3 := makeBlockID([]byte("blockhash3"), 10000, []byte("partshash"))
 
 	const (
 		height = int64(3)
@@ -466,7 +477,12 @@ func TestCommitToVoteSetWithVotesForNilBlock(t *testing.T) {
 	}
 
 	testCases := []commitVoteTest{
+		{[]BlockID{blockID, blockID2, blockID3}, []int{8, 1, 1}, 10, true},
+		{[]BlockID{blockID, blockID2, blockID3}, []int{67, 20, 13}, 100, true},
+		{[]BlockID{blockID, blockID2, blockID3}, []int{1, 1, 1}, 3, false},
+		{[]BlockID{blockID, blockID2, blockID3}, []int{3, 1, 1}, 5, false},
 		{[]BlockID{blockID, {}}, []int{67, 33}, 100, true},
+		{[]BlockID{blockID, blockID2, {}}, []int{10, 5, 5}, 20, false},
 	}
 
 	for _, tc := range testCases {
@@ -513,8 +529,10 @@ func TestSignedHeaderValidateBasic(t *testing.T) {
 	h := Header{
 		Version:            version.Consensus{Block: math.MaxInt64, App: math.MaxInt64},
 		ChainID:            chainID,
-		Height:             commit.Height,
+		Height:             commit.Height(),
 		Time:               timestamp,
+		NumTxs:             math.MaxInt64,
+		TotalTxs:           math.MaxInt64,
 		LastBlockID:        commit.BlockID,
 		LastCommitHash:     commit.Hash(),
 		DataHash:           commit.Hash(),
@@ -717,7 +735,7 @@ func TestCommitProtoBuf(t *testing.T) {
 	}{
 		{"success", commit, true},
 		// Empty value sets signatures to nil, signatures should not be nillable
-		{"empty commit", &Commit{Signatures: []CommitSig{}}, true},
+		{"empty commit", &Commit{Precommits: []*CommitSig{}}, true},
 		{"fail Commit nil", nil, false},
 	}
 	for _, tc := range testCases {
