@@ -79,7 +79,7 @@ func makeValidCommit(
 	vals *types.ValidatorSet,
 	privVals map[string]types.PrivValidator,
 ) (*types.Commit, error) {
-	sigs := make([]types.CommitSig, 0)
+	sigs := make([]*types.CommitSig, 0)
 	for i := 0; i < vals.Size(); i++ {
 		_, val := vals.GetByIndex(i)
 		vote, err := types.MakeVote(height, blockID, vals, privVals[val.Address.String()], chainID, time.Now())
@@ -88,7 +88,7 @@ func makeValidCommit(
 		}
 		sigs = append(sigs, vote.CommitSig())
 	}
-	return types.NewCommit(height, 0, blockID, sigs), nil
+	return types.NewCommit(blockID, sigs), nil
 }
 
 // make some bogus txs
@@ -162,8 +162,7 @@ func makeConsensusParams(
 			TimeIotaMs: blockTimeIotaMs,
 		},
 		Evidence: types.EvidenceParams{
-			MaxAgeNumBlocks: evidenceAge,
-			MaxAgeDuration:  time.Duration(evidenceAge),
+			MaxAge: evidenceAge,
 		},
 	}
 }

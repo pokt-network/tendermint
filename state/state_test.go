@@ -3,14 +3,12 @@ package state_test
 import (
 	"bytes"
 	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"math"
 	"math/big"
 	"os"
 	"testing"
-	"time"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	dbm "github.com/tendermint/tm-db"
 
@@ -1007,8 +1005,7 @@ func TestApplyUpdates(t *testing.T) {
 		3: {initParams,
 			abci.ConsensusParams{
 				Evidence: &abci.EvidenceParams{
-					MaxAgeNumBlocks: maxAge,
-					MaxAgeDuration:  time.Duration(maxAge),
+					MaxAge: maxAge,
 				},
 			},
 			makeConsensusParams(1, 2, 3, maxAge)},
