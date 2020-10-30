@@ -25,8 +25,13 @@ var (
 
 // Query holds the query string and the query parser.
 type Query struct {
-	str    string
-	parser *QueryParser
+	str        string
+	parser     *QueryParser
+	Pagination *Page
+}
+type Page struct {
+	Size int
+	Skip int
 }
 
 // Condition represents a single condition within a query and consists of composite key
@@ -56,6 +61,9 @@ func MustParse(s string) *Query {
 		panic(fmt.Sprintf("failed to parse %s: %v", s, err))
 	}
 	return q
+}
+func (q *Query) AddPage(size int, skip int) {
+	q.Pagination = &Page{size, skip}
 }
 
 // String returns the original string.

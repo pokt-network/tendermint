@@ -286,14 +286,24 @@ func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResu
 		}
 	}
 
-	results := make([]*types.TxResult, 0, len(filteredHashes))
+	results := make([]*types.TxResult, 0, q.Pagination.Size)
+	skipCount := 0
 	for _, h := range filteredHashes {
+		fmt.Println("new filter hashes")
+		// skip keys
+		if skipCount <= q.Pagination.Skip {
+			skipCount++
+			continue
+		}
 		res, err := txi.Get(h)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get Tx{%X}", h)
 		}
+		// TODO: avoid loading all txs Paginate!!!!
 		results = append(results, res)
-
+		if len(results) == cap(results) {
+			break
+		}
 		// Potentially exit early.
 		select {
 		case <-ctx.Done():
@@ -301,7 +311,6 @@ func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResu
 		default:
 		}
 	}
-
 	return results, nil
 }
 
@@ -448,7 +457,8 @@ func (txi *TxIndex) match(
 		defer it.Close()
 
 		for ; it.Valid(); it.Next() {
-			tmpHashes[string(it.Value())] = it.Value()
+			key := string(it.Value())
+			tmpHashes[key] = it.Value()
 
 			// Potentially exit early.
 			select {
@@ -457,7 +467,6 @@ func (txi *TxIndex) match(
 			default:
 			}
 		}
-
 	case c.Op == query.OpContains:
 		// XXX: startKey does not apply here.
 		// For example, if startKey = "account.owner/an/" and search query = "account.owner CONTAINS an"

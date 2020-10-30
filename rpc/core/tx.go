@@ -66,6 +66,7 @@ func TxSearch(ctx *rpctypes.Context, query string, prove bool, page, perPage int
 	if err != nil {
 		return nil, err
 	}
+	q.AddPage(perPage, validateSkipCount(page, perPage))
 
 	results, err := env.TxIndexer.Search(ctx.Context(), q)
 	if err != nil {
@@ -103,9 +104,7 @@ func TxSearch(ctx *rpctypes.Context, query string, prove bool, page, perPage int
 	pageSize := tmmath.MinInt(perPage, totalCount-skipCount)
 
 	apiResults := make([]*ctypes.ResultTx, 0, pageSize)
-	for i := skipCount; i < skipCount+pageSize; i++ {
-		r := results[i]
-
+	for _, r := range results {
 		var proof types.TxProof
 		if prove {
 			block := env.BlockStore.LoadBlock(r.Height)
