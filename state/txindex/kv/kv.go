@@ -62,16 +62,13 @@ func (txi *TxIndex) Get(hash []byte) (*types.TxResult, error) {
 		return nil, txindex.ErrorEmptyHash
 	}
 
-	rawBytes, err := txi.store.Get(hash)
-	if err != nil {
-		panic(err)
-	}
+	rawBytes, _ := txi.store.Get(hash)
 	if rawBytes == nil {
 		return nil, nil
 	}
 
 	txResult := new(types.TxResult)
-	err = cdc.UnmarshalBinaryBare(rawBytes, &txResult)
+	err := cdc.UnmarshalBinaryBare(rawBytes, &txResult)
 	if err != nil {
 		return nil, fmt.Errorf("error reading TxResult: %v", err)
 	}
@@ -289,9 +286,8 @@ func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResu
 	results := make([]*types.TxResult, 0, q.Pagination.Size)
 	skipCount := 0
 	for _, h := range filteredHashes {
-		fmt.Println("new filter hashes")
 		// skip keys
-		if skipCount <= q.Pagination.Skip {
+		if skipCount < q.Pagination.Skip {
 			skipCount++
 			continue
 		}
@@ -450,10 +446,7 @@ func (txi *TxIndex) match(
 
 	switch {
 	case c.Op == query.OpEqual:
-		it, err := dbm.IteratePrefix(txi.store, startKeyBz)
-		if err != nil {
-			panic(err)
-		}
+		it, _ := dbm.IteratePrefix(txi.store, startKeyBz)
 		defer it.Close()
 
 		for ; it.Valid(); it.Next() {
@@ -471,10 +464,7 @@ func (txi *TxIndex) match(
 		// XXX: startKey does not apply here.
 		// For example, if startKey = "account.owner/an/" and search query = "account.owner CONTAINS an"
 		// we can't iterate with prefix "account.owner/an/" because we might miss keys like "account.owner/Ulan/"
-		it, err := dbm.IteratePrefix(txi.store, startKey(c.CompositeKey))
-		if err != nil {
-			panic(err)
-		}
+		it, _ := dbm.IteratePrefix(txi.store, startKey(c.CompositeKey))
 		defer it.Close()
 
 		for ; it.Valid(); it.Next() {
@@ -548,10 +538,7 @@ func (txi *TxIndex) matchRange(
 	lowerBound := r.lowerBoundValue()
 	upperBound := r.upperBoundValue()
 
-	it, err := dbm.IteratePrefix(txi.store, startKey)
-	if err != nil {
-		panic(err)
-	}
+	it, _ := dbm.IteratePrefix(txi.store, startKey)
 	defer it.Close()
 
 LOOP:
