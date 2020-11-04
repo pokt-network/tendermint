@@ -32,6 +32,7 @@ type Query struct {
 type Page struct {
 	Size int
 	Skip int
+	Sort string
 }
 
 // Condition represents a single condition within a query and consists of composite key
@@ -62,8 +63,8 @@ func MustParse(s string) *Query {
 	}
 	return q
 }
-func (q *Query) AddPage(size int, skip int) {
-	q.Pagination = &Page{size, skip}
+func (q *Query) AddPage(size int, skip int, sort string) {
+	q.Pagination = &Page{size, skip, sort}
 }
 
 // String returns the original string.

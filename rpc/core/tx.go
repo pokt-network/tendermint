@@ -2,11 +2,9 @@ package core
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/pkg/errors"
 
-	tmmath "github.com/tendermint/tendermint/libs/math"
 	tmquery "github.com/tendermint/tendermint/libs/pubsub/query"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
@@ -66,44 +64,16 @@ func TxSearch(ctx *rpctypes.Context, query string, prove bool, page, perPage int
 	if err != nil {
 		return nil, err
 	}
-	q.AddPage(perPage, validateSkipCount(page, perPage))
+	q.AddPage(perPage, validateSkipCount(page, perPage), orderBy)
 
 	results, err := env.TxIndexer.Search(ctx.Context(), q)
 	if err != nil {
 		return nil, err
 	}
 
-	// sort results (must be done before pagination)
-	switch orderBy {
-	case "desc":
-		sort.Slice(results, func(i, j int) bool {
-			if results[i].Height == results[j].Height {
-				return results[i].Index > results[j].Index
-			}
-			return results[i].Height > results[j].Height
-		})
-	case "asc", "":
-		sort.Slice(results, func(i, j int) bool {
-			if results[i].Height == results[j].Height {
-				return results[i].Index < results[j].Index
-			}
-			return results[i].Height < results[j].Height
-		})
-	default:
-		return nil, errors.New("expected order_by to be either `asc` or `desc` or empty")
-	}
-
-	// paginate results
 	totalCount := len(results)
-	perPage = validatePerPage(perPage)
-	page, err = validatePage(page, perPage, totalCount)
-	if err != nil {
-		return nil, err
-	}
-	skipCount := validateSkipCount(page, perPage)
-	pageSize := tmmath.MinInt(perPage, totalCount-skipCount)
-
-	apiResults := make([]*ctypes.ResultTx, 0, pageSize)
+	apiResults := make([]*ctypes.ResultTx, 0, totalCount)
+	fmt.Println(totalCount)
 	for _, r := range results {
 		var proof types.TxProof
 		if prove {
