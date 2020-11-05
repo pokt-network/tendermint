@@ -5,6 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	tmmath "github.com/tendermint/tendermint/libs/math"
 	tmquery "github.com/tendermint/tendermint/libs/pubsub/query"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
@@ -75,6 +76,57 @@ func TxSearch(ctx *rpctypes.Context, query string, prove bool, page, perPage int
 	apiResults := make([]*ctypes.ResultTx, 0, totalCount)
 	fmt.Println(totalCount)
 	for _, r := range results {
+		var proof types.TxProof
+		if prove {
+			block := env.BlockStore.LoadBlock(r.Height)
+			proof = block.Data.Txs.Proof(int(r.Index)) // XXX: overflow on 32-bit machines
+		}
+
+		apiResults = append(apiResults, &ctypes.ResultTx{
+			Hash:     r.Tx.Hash(),
+			Height:   r.Height,
+			Index:    r.Index,
+			TxResult: r.Result,
+			Tx:       r.Tx,
+			Proof:    proof,
+		})
+	}
+
+	return &ctypes.ResultTxSearch{Txs: apiResults, TotalCount: totalCount}, nil
+}
+
+func ReducedTxSearch(ctx *rpctypes.Context, query string, prove bool, page, perPage int, orderBy string) (
+	*ctypes.ResultTxSearch, error) {
+	// if index is disabled, return error
+	if _, ok := env.TxIndexer.(*null.TxIndex); ok {
+		return nil, errors.New("transaction indexing is disabled")
+	}
+
+	q, err := tmquery.New(query)
+	if err != nil {
+		return nil, err
+	}
+	q.AddPage(perPage, validateSkipCount(page, perPage), orderBy)
+
+	results, err := env.TxIndexer.ReducedSearch(ctx.Context(), q)
+	if err != nil {
+		return nil, err
+	}
+
+	// paginate results
+	totalCount := len(results)
+	perPage = validatePerPage(perPage)
+	page, err = validatePage(page, perPage, totalCount)
+	if err != nil {
+		return nil, err
+	}
+	skipCount := validateSkipCount(page, perPage)
+	pageSize := tmmath.MinInt(perPage, totalCount-skipCount)
+
+	apiResults := make([]*ctypes.ResultTx, 0, pageSize)
+	for i := skipCount; i < skipCount+pageSize; i++ {
+		r := results[i]
+
 		var proof types.TxProof
 		if prove {
 			block := env.BlockStore.LoadBlock(r.Height)

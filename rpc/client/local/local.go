@@ -165,6 +165,10 @@ func (c *Local) TxSearch(query string, prove bool, page, perPage int, orderBy st
 	*ctypes.ResultTxSearch, error) {
 	return core.TxSearch(c.ctx, query, prove, page, perPage, orderBy)
 }
+func (c *Local) ReducedTxSearch(query string, prove bool, page, perPage int, orderBy string) (
+	*ctypes.ResultTxSearch, error) {
+	return core.ReducedTxSearch(c.ctx, query, prove, page, perPage, orderBy)
+}
 
 func (c *Local) BroadcastEvidence(ev types.Evidence) (*ctypes.ResultBroadcastEvidence, error) {
 	return core.BroadcastEvidence(c.ctx, ev)
