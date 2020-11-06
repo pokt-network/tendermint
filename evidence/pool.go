@@ -98,9 +98,9 @@ func (evpool *Pool) Update(block *types.Block, state sm.State) {
 func (evpool *Pool) AddEvidence(evidence types.Evidence) error {
 
 	// check if evidence is already stored
-	if evpool.store.Has(evidence) {
-		return ErrEvidenceAlreadyStored{}
-	}
+	//if evpool.store.Has(evidence) {
+	//	return ErrEvidenceAlreadyStored{}
+	//}
 
 	if err := sm.VerifyEvidence(evpool.stateDB, evpool.State(), evidence); err != nil {
 		return ErrInvalidEvidence{err}
@@ -115,8 +115,8 @@ func (evpool *Pool) AddEvidence(evidence types.Evidence) error {
 	_, val := valset.GetByAddress(evidence.Address())
 	priority := val.VotingPower
 
-	_, err = evpool.store.AddNewEvidence(evidence, priority)
-	if err != nil {
+	added, err := evpool.store.AddNewEvidence(evidence, priority)
+	if err != nil || !added {
 		return err
 	}
 

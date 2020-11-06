@@ -108,10 +108,7 @@ func (store *Store) PendingEvidence(maxNum int64) (evidence []types.Evidence) {
 // If maxNum is -1, there's no cap on the size of returned evidence.
 func (store *Store) listEvidence(prefixKey string, maxNum int64) (evidence []types.Evidence) {
 	var count int64
-	iter, err := dbm.IteratePrefix(store.db, []byte(prefixKey))
-	if err != nil {
-		panic(err)
-	}
+	iter, _ := dbm.IteratePrefix(store.db, []byte(prefixKey))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		val := iter.Value()
@@ -135,15 +132,13 @@ func (store *Store) listEvidence(prefixKey string, maxNum int64) (evidence []typ
 // If not found, ei.Evidence is nil.
 func (store *Store) GetInfo(height int64, hash []byte) Info {
 	key := keyLookupFromHeightAndHash(height, hash)
-	val, err := store.db.Get(key)
-	if err != nil {
-		panic(err)
-	}
+	val, _ := store.db.Get(key)
+
 	if len(val) == 0 {
 		return Info{}
 	}
 	var ei Info
-	err = cdc.UnmarshalBinaryBare(val, &ei)
+	err := cdc.UnmarshalBinaryBare(val, &ei)
 	if err != nil {
 		panic(err)
 	}

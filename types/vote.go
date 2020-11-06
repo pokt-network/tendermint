@@ -37,7 +37,11 @@ func (err *ErrVoteConflictingVotes) Error() string {
 
 func NewConflictingVoteError(val *Validator, vote1, vote2 *Vote) *ErrVoteConflictingVotes {
 	return &ErrVoteConflictingVotes{
-		NewDuplicateVoteEvidence(val.PubKey, vote1, vote2),
+		&DuplicateVoteEvidence{
+			PubKey: val.PubKey,
+			VoteA:  vote1,
+			VoteB:  vote2,
+		},
 	}
 }
 
