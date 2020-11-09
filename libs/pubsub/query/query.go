@@ -25,8 +25,14 @@ var (
 
 // Query holds the query string and the query parser.
 type Query struct {
-	str    string
-	parser *QueryParser
+	str        string
+	parser     *QueryParser
+	Pagination *Page
+}
+type Page struct {
+	Size int
+	Skip int
+	Sort string
 }
 
 // Condition represents a single condition within a query and consists of composite key
@@ -56,6 +62,9 @@ func MustParse(s string) *Query {
 		panic(fmt.Sprintf("failed to parse %s: %v", s, err))
 	}
 	return q
+}
+func (q *Query) AddPage(size int, skip int, sort string) {
+	q.Pagination = &Page{size, skip, sort}
 }
 
 // String returns the original string.
@@ -90,6 +99,113 @@ const (
 	// TimeLayout defines a layout for all times (`TIME time`)
 	TimeLayout = time.RFC3339
 )
+
+// Conditions returns a list of conditions. It returns an error if there is any
+// error with the provided grammar in the Query.
+func (q *Query) Condition() (Condition, error) {
+	var (
+		eventAttr string
+		op        Operator
+	)
+
+	conditions := make([]Condition, 0)
+	buffer, begin, end := q.parser.Buffer, 0, 0
+
+	// tokens must be in the following order: tag ("tx.gas") -> operator ("=") -> operand ("7")
+	for token := range q.parser.Tokens() {
+		switch token.pegRule {
+		case rulePegText:
+			begin, end = int(token.begin), int(token.end)
+
+		case ruletag:
+			eventAttr = buffer[begin:end]
+
+		case rulele:
+			op = OpLessEqual
+
+		case rulege:
+			op = OpGreaterEqual
+
+		case rulel:
+			op = OpLess
+
+		case ruleg:
+			op = OpGreater
+
+		case ruleequal:
+			op = OpEqual
+
+		case rulecontains:
+			op = OpContains
+
+		case ruleexists:
+			op = OpExists
+			conditions = append(conditions, Condition{eventAttr, op, nil})
+			break
+
+		case rulevalue:
+			// strip single quotes from value (i.e. "'NewBlock'" -> "NewBlock")
+			valueWithoutSingleQuotes := buffer[begin+1 : end-1]
+			conditions = append(conditions, Condition{eventAttr, op, valueWithoutSingleQuotes})
+			break
+
+		case rulenumber:
+			number := buffer[begin:end]
+			if strings.ContainsAny(number, ".") { // if it looks like a floating-point number
+				value, err := strconv.ParseFloat(number, 64)
+				if err != nil {
+					err = fmt.Errorf(
+						"got %v while trying to parse %s as float64 (should never happen if the grammar is correct)",
+						err, number,
+					)
+					return Condition{}, err
+				}
+
+				conditions = append(conditions, Condition{eventAttr, op, value})
+			} else {
+				value, err := strconv.ParseInt(number, 10, 64)
+				if err != nil {
+					err = fmt.Errorf(
+						"got %v while trying to parse %s as int64 (should never happen if the grammar is correct)",
+						err, number,
+					)
+					return Condition{}, err
+				}
+
+				conditions = append(conditions, Condition{eventAttr, op, value})
+				break
+			}
+
+		case ruletime:
+			value, err := time.Parse(TimeLayout, buffer[begin:end])
+			if err != nil {
+				err = fmt.Errorf(
+					"got %v while trying to parse %s as time.Time / RFC3339 (should never happen if the grammar is correct)",
+					err, buffer[begin:end],
+				)
+				return Condition{}, err
+			}
+
+			conditions = append(conditions, Condition{eventAttr, op, value})
+			break
+
+		case ruledate:
+			value, err := time.Parse("2006-01-02", buffer[begin:end])
+			if err != nil {
+				err = fmt.Errorf(
+					"got %v while trying to parse %s as time.Time / '2006-01-02' (should never happen if the grammar is correct)",
+					err, buffer[begin:end],
+				)
+				return Condition{}, err
+			}
+
+			conditions = append(conditions, Condition{eventAttr, op, value})
+			break
+		}
+	}
+
+	return conditions[0], nil
+}
 
 // Conditions returns a list of conditions. It returns an error if there is any
 // error with the provided grammar in the Query.

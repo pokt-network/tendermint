@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -210,7 +211,7 @@ func (txi *TxIndex) DeleteFromHeight(ctx context.Context, height int64) error {
 // from querying indexes are then intersected and returned to the caller.
 func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResult, error) {
 	var hashesInitialized bool
-	filteredHashes := make(map[string][]byte)
+	filteredHashes := make(map[string]*keyAndHash)
 
 	// get a list of conditions (like "tx.height > 5")
 	conditions, err := q.Conditions()
@@ -219,7 +220,7 @@ func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResu
 	}
 
 	// if there is a hash condition, return the result immediately
-	hash, ok, err := lookForHash(conditions)
+	hash, ok, err := lookForHash(conditions...)
 	if err != nil {
 		return nil, errors.Wrap(err, "error during searching for a hash in the query")
 	} else if ok {
@@ -240,7 +241,7 @@ func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResu
 	// extract ranges
 	// if both upper and lower bounds exist, it's better to get them in order not
 	// no iterate over kvs that are not within range.
-	ranges, rangeIndexes := lookForRanges(conditions)
+	ranges, rangeIndexes := lookForRanges(conditions...)
 	if len(ranges) > 0 {
 		skipIndexes = append(skipIndexes, rangeIndexes...)
 
@@ -261,14 +262,13 @@ func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResu
 	}
 
 	// if there is a height condition ("tx.height=3"), extract it
-	height := lookForHeight(conditions)
+	height := lookForHeight(conditions...)
 
 	// for all other conditions
 	for i, c := range conditions {
 		if intInSlice(i, skipIndexes) {
 			continue
 		}
-
 		if !hashesInitialized {
 			filteredHashes = txi.match(ctx, c, startKeyForCondition(c, height), filteredHashes, true)
 			hashesInitialized = true
@@ -284,25 +284,177 @@ func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResu
 	}
 
 	results := make([]*types.TxResult, 0, len(filteredHashes))
-	for _, h := range filteredHashes {
-		res, err := txi.Get(h)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get Tx{%X}", h)
+	if q.Pagination != nil {
+		var sortHashes []*keyAndHash
+		for _, hashKeyPair := range filteredHashes {
+			sortHashes = append(sortHashes, hashKeyPair)
 		}
-		results = append(results, res)
+		filteredHashes = nil // IGNORE MAP PLEASE!! XD
 
+		switch q.Pagination.Sort {
+		case "desc":
+			sort.Slice(sortHashes, func(i, j int) bool {
+				a := strings.Split(sortHashes[i].key, "/")
+				b := strings.Split(sortHashes[j].key, "/")
+				aHeight, _ := strconv.Atoi(a[2])
+				bHeight, _ := strconv.Atoi(b[2])
+				if aHeight == bHeight {
+					aIndex, _ := strconv.Atoi(a[3])
+					bIndex, _ := strconv.Atoi(b[3])
+					return aIndex < bIndex
+				}
+				return aHeight > bHeight
+			})
+		case "asc", "":
+			sort.Slice(sortHashes, func(i, j int) bool {
+				a := strings.Split(sortHashes[i].key, "/")
+				b := strings.Split(sortHashes[j].key, "/")
+				aHeight, _ := strconv.Atoi(a[2])
+				bHeight, _ := strconv.Atoi(b[2])
+				if aHeight == bHeight {
+					aIndex, _ := strconv.Atoi(a[3])
+					bIndex, _ := strconv.Atoi(b[3])
+					return aIndex < bIndex
+				}
+				return aHeight < bHeight
+			})
+		}
+		skipCount := 0
+		results = make([]*types.TxResult, 0, q.Pagination.Size)
+		for _, hat := range sortHashes {
+			select {
+			case <-ctx.Done():
+				break
+			default:
+				// skip keys
+				if skipCount > q.Pagination.Skip {
+					skipCount++
+					continue
+				}
+				res, err := txi.Get(hat.hash)
+				if err != nil {
+					return nil, errors.Wrapf(err, "failed to get Tx{%X}", hat.hash)
+				}
+				results = append(results, res)
+				// Potentially exit early.
+				if len(results) == cap(results) {
+					return results, nil
+				}
+			}
+		}
+	}
+	for _, hashAndKeyPair := range filteredHashes {
 		// Potentially exit early.
 		select {
 		case <-ctx.Done():
 			break
 		default:
+			res, err := txi.Get(hashAndKeyPair.hash)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to get Tx{%X}", hashAndKeyPair.hash)
+			}
+			results = append(results, res)
 		}
 	}
-
 	return results, nil
 }
 
-func lookForHash(conditions []query.Condition) (hash []byte, ok bool, err error) {
+// Search performs a search using a reduced query operations
+// CONTRACT: will only look for single condition (Eq, Contains) will not look for ranges.
+func (txi *TxIndex) ReducedSearch(ctx context.Context, q *query.Query) ([]*types.TxResult, error) {
+	// get a list of conditions (like "tx.height > 5")
+	condition, err := q.Condition()
+	if err != nil {
+		return nil, errors.Wrap(err, "error during parsing condition from query")
+	}
+
+	// if there is a hash condition, return the result immediately
+	hash, ok, err := lookForHash(condition)
+	if err != nil {
+		return nil, errors.Wrap(err, "error during searching for a hash in the query")
+	} else if ok {
+		res, err := txi.Get(hash)
+		switch {
+		case err != nil:
+			return []*types.TxResult{}, errors.Wrap(err, "error while retrieving the result")
+		case res == nil:
+			return []*types.TxResult{}, nil
+		default:
+			return []*types.TxResult{res}, nil
+		}
+	}
+
+	height := lookForHeight(condition)
+
+	matchedKeys := txi.keys(ctx, condition, startKeyForCondition(condition, height))
+
+	results := make([]*types.TxResult, 0, len(matchedKeys))
+	if q.Pagination != nil {
+		var sortHashes []*keyAndHash
+		for k, v := range matchedKeys {
+			sortHashes = append(sortHashes, &keyAndHash{k, v})
+		}
+		matchedKeys = nil
+
+		switch q.Pagination.Sort {
+		case "desc":
+			sort.Slice(sortHashes, func(i, j int) bool {
+				a := strings.Split(sortHashes[i].key, "/")
+				b := strings.Split(sortHashes[j].key, "/")
+				aHeight, _ := strconv.Atoi(a[2])
+				bHeight, _ := strconv.Atoi(b[2])
+				if aHeight == bHeight {
+					aIndex, _ := strconv.Atoi(a[3])
+					bIndex, _ := strconv.Atoi(b[3])
+					return aIndex < bIndex
+				}
+				return aHeight > bHeight
+			})
+		case "asc", "":
+			sort.Slice(sortHashes, func(i, j int) bool {
+				a := strings.Split(sortHashes[i].key, "/")
+				b := strings.Split(sortHashes[j].key, "/")
+				aHeight, _ := strconv.Atoi(a[2])
+				bHeight, _ := strconv.Atoi(b[2])
+				if aHeight == bHeight {
+					aIndex, _ := strconv.Atoi(a[3])
+					bIndex, _ := strconv.Atoi(b[3])
+					return aIndex < bIndex
+				}
+				return aHeight < bHeight
+			})
+		}
+		skipCount := 0
+		results = make([]*types.TxResult, 0, q.Pagination.Size)
+		for _, hat := range sortHashes {
+			select {
+			case <-ctx.Done():
+				break
+			default:
+				// skip keys
+				if skipCount > q.Pagination.Skip {
+					skipCount++
+					continue
+				}
+				res, err := txi.Get(hat.hash)
+				if err != nil {
+					return nil, errors.Wrapf(err, "failed to get Tx{%X}", hat.hash)
+				}
+				results = append(results, res)
+				// Potentially exit early.
+				if len(results) == cap(results) {
+					fmt.Println(fmt.Sprintf("pagination size: %d", q.Pagination.Size))
+					fmt.Println(fmt.Sprintf("results len : %d", len(results)))
+					fmt.Println(fmt.Sprintf("results cap : %d", cap(results)))
+					return results, nil
+				}
+			}
+		}
+	}
+	return []*types.TxResult{}, nil
+}
+
+func lookForHash(conditions ...query.Condition) (hash []byte, ok bool, err error) {
 	for _, c := range conditions {
 		if c.CompositeKey == types.TxHashKey {
 			decoded, err := hex.DecodeString(c.Operand.(string))
@@ -313,7 +465,7 @@ func lookForHash(conditions []query.Condition) (hash []byte, ok bool, err error)
 }
 
 // lookForHeight returns a height if there is an "height=X" condition.
-func lookForHeight(conditions []query.Condition) (height int64) {
+func lookForHeight(conditions ...query.Condition) (height int64) {
 	for _, c := range conditions {
 		if c.CompositeKey == types.TxHeightKey && c.Op == query.OpEqual {
 			return c.Operand.(int64)
@@ -380,7 +532,7 @@ func (r queryRange) upperBoundValue() interface{} {
 	}
 }
 
-func lookForRanges(conditions []query.Condition) (ranges queryRanges, indexes []int) {
+func lookForRanges(conditions ...query.Condition) (ranges queryRanges, indexes []int) {
 	ranges = make(queryRanges)
 	for i, c := range conditions {
 		if isRangeOperation(c.Op) {
@@ -416,6 +568,70 @@ func isRangeOperation(op query.Operator) bool {
 	}
 }
 
+type hashAndIndexer struct {
+	hash []byte
+	txi  *TxIndex
+}
+
+type sortByHeight []hashAndIndexer
+type sortByKey []hashAndIndexer
+
+type keyAndHash struct {
+	key  string
+	hash []byte
+}
+
+// Retrieves the keys from the iterator based on condition
+// NOTE: filteredHashes may be empty if no previous condition has matched.
+func (txi *TxIndex) keys(
+	ctx context.Context,
+	c query.Condition,
+	startKeyBz []byte,
+) map[string][]byte {
+	hashes := make(map[string][]byte)
+	switch {
+	case c.Op == query.OpEqual:
+		it, _ := dbm.IteratePrefix(txi.store, startKeyBz)
+		defer it.Close()
+
+		for ; it.Valid(); it.Next() {
+			// Potentially exit early.
+			select {
+			case <-ctx.Done():
+				break
+			default:
+				hashes[string(it.Key())] = it.Value()
+			}
+
+		}
+	case c.Op == query.OpContains:
+		// XXX: startKey does not apply here.
+		// For example, if startKey = "account.owner/an/" and search query = "account.owner CONTAINS an"
+		// we can't iterate with prefix "account.owner/an/" because we might miss keys like "account.owner/Ulan/"
+		it, _ := dbm.IteratePrefix(txi.store, startKey(c.CompositeKey))
+		defer it.Close()
+
+		for ; it.Valid(); it.Next() {
+			// Potentially exit early.
+			select {
+			case <-ctx.Done():
+				break
+			default:
+				if !isTagKey(it.Key()) {
+					continue
+				}
+
+				if strings.Contains(extractValueFromKey(it.Key()), c.Operand.(string)) {
+					hashes[string(it.Key())] = it.Value()
+				}
+			}
+		}
+	default:
+		panic("other operators should be handled already")
+	}
+	return hashes
+}
+
 // match returns all matching txs by hash that meet a given condition and start
 // key. An already filtered result (filteredHashes) is provided such that any
 // non-intersecting matches are removed.
@@ -425,33 +641,31 @@ func (txi *TxIndex) match(
 	ctx context.Context,
 	c query.Condition,
 	startKeyBz []byte,
-	filteredHashes map[string][]byte,
+	filteredHashes map[string]*keyAndHash,
 	firstRun bool,
-) map[string][]byte {
+) map[string]*keyAndHash {
 	// A previous match was attempted but resulted in no matches, so we return
 	// no matches (assuming AND operand).
 	if !firstRun && len(filteredHashes) == 0 {
 		return filteredHashes
 	}
-
-	tmpHashes := make(map[string][]byte)
-
+	tmpHashes := make(map[string]*keyAndHash)
 	switch {
 	case c.Op == query.OpEqual:
 		it, _ := dbm.IteratePrefix(txi.store, startKeyBz)
 		defer it.Close()
 
 		for ; it.Valid(); it.Next() {
-			tmpHashes[string(it.Value())] = it.Value()
-
 			// Potentially exit early.
 			select {
 			case <-ctx.Done():
 				break
 			default:
+				key := string(it.Value())
+				tmpHashes[key] = &keyAndHash{string(it.Key()), it.Value()}
 			}
-		}
 
+		}
 	case c.Op == query.OpContains:
 		// XXX: startKey does not apply here.
 		// For example, if startKey = "account.owner/an/" and search query = "account.owner CONTAINS an"
@@ -460,19 +674,18 @@ func (txi *TxIndex) match(
 		defer it.Close()
 
 		for ; it.Valid(); it.Next() {
-			if !isTagKey(it.Key()) {
-				continue
-			}
-
-			if strings.Contains(extractValueFromKey(it.Key()), c.Operand.(string)) {
-				tmpHashes[string(it.Value())] = it.Value()
-			}
-
 			// Potentially exit early.
 			select {
 			case <-ctx.Done():
 				break
 			default:
+				if !isTagKey(it.Key()) {
+					continue
+				}
+
+				if strings.Contains(extractValueFromKey(it.Key()), c.Operand.(string)) {
+					tmpHashes[string(it.Value())] = &keyAndHash{string(it.Key()), it.Value()}
+				}
 			}
 		}
 	default:
@@ -494,13 +707,12 @@ func (txi *TxIndex) match(
 	// match (tmpHashes).
 	for k := range filteredHashes {
 		if tmpHashes[k] == nil {
-			delete(filteredHashes, k)
-
 			// Potentially exit early.
 			select {
 			case <-ctx.Done():
 				break
 			default:
+				delete(filteredHashes, k)
 			}
 		}
 	}
@@ -517,16 +729,16 @@ func (txi *TxIndex) matchRange(
 	ctx context.Context,
 	r queryRange,
 	startKey []byte,
-	filteredHashes map[string][]byte,
+	filteredHashes map[string]*keyAndHash,
 	firstRun bool,
-) map[string][]byte {
+) map[string]*keyAndHash {
 	// A previous match was attempted but resulted in no matches, so we return
 	// no matches (assuming AND operand).
 	if !firstRun && len(filteredHashes) == 0 {
 		return filteredHashes
 	}
 
-	tmpHashes := make(map[string][]byte)
+	tmpHashes := make(map[string]*keyAndHash)
 	lowerBound := r.lowerBoundValue()
 	upperBound := r.upperBoundValue()
 
@@ -555,7 +767,7 @@ LOOP:
 			}
 
 			if include {
-				tmpHashes[string(it.Value())] = it.Value()
+				tmpHashes[string(it.Value())] = &keyAndHash{string(it.Key()), it.Value()}
 			}
 
 			// XXX: passing time in a ABCI Events is not yet implemented

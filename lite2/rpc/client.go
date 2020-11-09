@@ -352,6 +352,11 @@ func (c *Client) TxSearch(query string, prove bool, page, perPage int, orderBy s
 	return c.next.TxSearch(query, prove, page, perPage, orderBy)
 }
 
+func (c *Client) ReducedTxSearch(query string, prove bool, page, perPage int, orderBy string) (
+	*ctypes.ResultTxSearch, error) {
+	return c.next.ReducedTxSearch(query, prove, page, perPage, orderBy)
+}
+
 // Validators fetches and verifies validators.
 //
 // WARNING: only full validator sets are verified (when length of validators is
