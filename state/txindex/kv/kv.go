@@ -443,15 +443,12 @@ func (txi *TxIndex) ReducedSearch(ctx context.Context, q *query.Query) ([]*types
 				results = append(results, res)
 				// Potentially exit early.
 				if len(results) == cap(results) {
-					fmt.Println(fmt.Sprintf("pagination size: %d", q.Pagination.Size))
-					fmt.Println(fmt.Sprintf("results len : %d", len(results)))
-					fmt.Println(fmt.Sprintf("results cap : %d", cap(results)))
 					return results, nil
 				}
 			}
 		}
 	}
-	return []*types.TxResult{}, nil
+	return results, nil
 }
 
 func lookForHash(conditions ...query.Condition) (hash []byte, ok bool, err error) {

@@ -5,7 +5,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	tmmath "github.com/tendermint/tendermint/libs/math"
 	tmquery "github.com/tendermint/tendermint/libs/pubsub/query"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
@@ -74,7 +73,6 @@ func TxSearch(ctx *rpctypes.Context, query string, prove bool, page, perPage int
 
 	totalCount := len(results)
 	apiResults := make([]*ctypes.ResultTx, 0, totalCount)
-	fmt.Println(totalCount)
 	for _, r := range results {
 		var proof types.TxProof
 		if prove {
@@ -112,21 +110,9 @@ func ReducedTxSearch(ctx *rpctypes.Context, query string, prove bool, page, perP
 	if err != nil {
 		return nil, err
 	}
-
-	// paginate results
 	totalCount := len(results)
-	perPage = validatePerPage(perPage)
-	page, err = validatePage(page, perPage, totalCount)
-	if err != nil {
-		return nil, err
-	}
-	skipCount := validateSkipCount(page, perPage)
-	pageSize := tmmath.MinInt(perPage, totalCount-skipCount)
-
-	apiResults := make([]*ctypes.ResultTx, 0, pageSize)
-	for i := skipCount; i < skipCount+pageSize; i++ {
-		r := results[i]
-
+	apiResults := make([]*ctypes.ResultTx, 0, totalCount)
+	for _, r := range results {
 		var proof types.TxProof
 		if prove {
 			block := env.BlockStore.LoadBlock(r.Height)
