@@ -419,7 +419,7 @@ func (c *baseRPCClient) ReducedTxSearch(query string, prove bool, page, perPage 
 	}
 	_, err := c.caller.Call("reduced_tx_search", params, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "TxSearch")
+		return nil, errors.Wrap(err, "ReducedTxSearch")
 	}
 	return result, nil
 }
