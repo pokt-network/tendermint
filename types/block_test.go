@@ -127,7 +127,7 @@ func TestBlockMakePartSetWithEvidence(t *testing.T) {
 	ev := NewMockEvidence(h, time.Now(), 0, valSet.Validators[0].Address)
 	evList := []Evidence{ev}
 
-	partSet := MakeBlock(h, []Tx{Tx("Hello World")}, commit, evList).MakePartSet(512)
+	partSet := MakeBlock(h, []Tx{Tx("Hello World")}, commit, evList).MakePartSet(1024)
 	assert.NotNil(t, partSet)
 	assert.Equal(t, 3, partSet.Total())
 }
@@ -365,6 +365,7 @@ func randCommit(now time.Time) *Commit {
 	if err != nil {
 		panic(err)
 	}
+	commit.memoizeHeightRound()
 	return commit
 }
 
@@ -415,9 +416,9 @@ func TestBlockMaxDataBytesUnknownEvidence(t *testing.T) {
 	}{
 		0: {-10, 1, true, 0},
 		1: {10, 1, true, 0},
-		2: {961, 1, true, 0},
-		3: {962, 1, false, 0},
-		4: {963, 1, false, 1},
+		2: {984, 1, true, 0},
+		3: {985, 1, false, 0},
+		4: {986, 1, false, 1},
 	}
 
 	for i, tc := range testCases {

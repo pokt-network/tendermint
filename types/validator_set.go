@@ -1003,7 +1003,7 @@ func (valz ValidatorsByAddress) Swap(i, j int) {
 
 // ToProto converts ValidatorSet to protobuf
 func (vals *ValidatorSet) ToProto() (*tmproto.ValidatorSet, error) {
-	if vals == nil {
+	if vals.IsNilOrEmpty() {
 		return nil, errors.New("nil validator set") // validator set should never be nil
 	}
 	vp := new(tmproto.ValidatorSet)
@@ -1017,11 +1017,13 @@ func (vals *ValidatorSet) ToProto() (*tmproto.ValidatorSet, error) {
 	}
 	vp.Validators = valsProto
 
-	valProposer, err := vals.Proposer.ToProto()
-	if err != nil {
-		return nil, fmt.Errorf("toProto: validatorSet proposer error: %w", err)
+	if vals.Proposer != nil {
+		valProposer, err := vals.Proposer.ToProto()
+		if err != nil {
+			return nil, fmt.Errorf("toProto: validatorSet proposer error: %w", err)
+		}
+		vp.Proposer = valProposer
 	}
-	vp.Proposer = valProposer
 
 	vp.TotalVotingPower = vals.totalVotingPower
 
@@ -1047,12 +1049,14 @@ func ValidatorSetFromProto(vp *tmproto.ValidatorSet) (*ValidatorSet, error) {
 	}
 	vals.Validators = valsProto
 
-	p, err := ValidatorFromProto(vp.GetProposer())
-	if err != nil {
-		return nil, fmt.Errorf("fromProto: validatorSet proposer error: %w", err)
-	}
+	if vp.GetProposer() != nil {
+		p, err := ValidatorFromProto(vp.GetProposer())
+		if err != nil {
+			return nil, fmt.Errorf("fromProto: validatorSet proposer error: %w", err)
+		}
 
-	vals.Proposer = p
+		vals.Proposer = p
+	}
 
 	vals.totalVotingPower = vp.GetTotalVotingPower()
 

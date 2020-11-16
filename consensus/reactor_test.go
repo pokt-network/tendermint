@@ -160,7 +160,7 @@ func TestReactorWithEvidence(t *testing.T) {
 		evpool := newMockEvidencePool(pubKey.Address())
 
 		// Make State
-		blockExec := sm.NewBlockExecutor(stateDB, log.TestingLogger(), proxyAppConnCon, mempool, evpool)
+		blockExec := sm.NewBlockExecutor(stateDB, log.TestingLogger(), proxyAppConnCon, mempool, evpool, nil)
 		cs := NewState(thisConfig.Consensus, state, blockExec, blockStore, mempool, evpool)
 		cs.SetLogger(log.TestingLogger().With("module", "consensus"))
 		cs.SetPrivValidator(pv)
@@ -200,6 +200,10 @@ func TestReactorWithEvidence(t *testing.T) {
 type mockEvidencePool struct {
 	height int
 	ev     []types.Evidence
+}
+
+func (m *mockEvidencePool) RollbackEvidence(height int64, latestHeight int64) {
+	panic("implement me")
 }
 
 func newMockEvidencePool(val []byte) *mockEvidencePool {
@@ -624,9 +628,9 @@ func validateBlock(block *types.Block, activeVals map[string]struct{}) error {
 			len(activeVals))
 	}
 
-	for _, commitSig := range block.LastCommit.Signatures {
-		if _, ok := activeVals[string(commitSig.ValidatorAddress)]; !ok {
-			return fmt.Errorf("found vote for inactive validator %X", commitSig.ValidatorAddress)
+	for _, vote := range block.LastCommit.Precommits {
+		if _, ok := activeVals[string(vote.ValidatorAddress)]; !ok {
+			return fmt.Errorf("Found vote for unactive validator %X", vote.ValidatorAddress)
 		}
 	}
 	return nil

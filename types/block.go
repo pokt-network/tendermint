@@ -22,7 +22,7 @@ import (
 
 const (
 	// MaxHeaderBytes is a maximum header size (including amino overhead).
-	MaxHeaderBytes int64 = 632
+	MaxHeaderBytes int64 = 653
 
 	// MaxAminoOverheadForBlock - maximum amino overhead to encode a block (up to
 	// MaxBlockSizeBytes in size) not including it's parts except Data.
@@ -836,34 +836,36 @@ func (commit *Commit) IsCommit() bool {
 // ValidateBasic performs basic validation that doesn't involve state data.
 // Does not actually check the cryptographic signatures.
 func (commit *Commit) ValidateBasic() error {
-	if commit.BlockID.IsZero() {
-		return errors.New("Commit cannot be for nil block")
-	}
-	if len(commit.Precommits) == 0 {
-		return errors.New("No precommits in commit")
-	}
-	height, round := commit.Height(), commit.Round()
+	if commit.Height() >= 1 {
+		if commit.BlockID.IsZero() {
+			return errors.New("Commit cannot be for nil block")
+		}
+		if len(commit.Precommits) == 0 {
+			return errors.New("No precommits in commit")
+		}
+		height, round := commit.Height(), commit.Round()
 
-	// Validate the precommits.
-	for _, precommit := range commit.Precommits {
-		// It's OK for precommits to be missing.
-		if precommit == nil {
-			continue
-		}
-		// Ensure that all votes are precommits.
-		if precommit.Type != PrecommitType {
-			return fmt.Errorf("Invalid commit vote. Expected precommit, got %v",
-				precommit.Type)
-		}
-		// Ensure that all heights are the same.
-		if precommit.Height != height {
-			return fmt.Errorf("Invalid commit precommit height. Expected %v, got %v",
-				height, precommit.Height)
-		}
-		// Ensure that all rounds are the same.
-		if precommit.Round != round {
-			return fmt.Errorf("Invalid commit precommit round. Expected %v, got %v",
-				round, precommit.Round)
+		// Validate the precommits.
+		for _, precommit := range commit.Precommits {
+			// It's OK for precommits to be missing.
+			if precommit == nil {
+				continue
+			}
+			// Ensure that all votes are precommits.
+			if precommit.Type != PrecommitType {
+				return fmt.Errorf("Invalid commit vote. Expected precommit, got %v",
+					precommit.Type)
+			}
+			// Ensure that all heights are the same.
+			if precommit.Height != height {
+				return fmt.Errorf("Invalid commit precommit height. Expected %v, got %v",
+					height, precommit.Height)
+			}
+			// Ensure that all rounds are the same.
+			if precommit.Round != round {
+				return fmt.Errorf("Invalid commit precommit round. Expected %v, got %v",
+					round, precommit.Round)
+			}
 		}
 	}
 
@@ -949,6 +951,7 @@ func CommitFromProto(cp *tmproto.Commit) (*Commit, error) {
 
 	sigs := make([]*CommitSig, len(cp.Precommits))
 	for i := range cp.Precommits {
+		sigs[i] = &CommitSig{}
 		if err := sigs[i].FromProto(cp.Precommits[i]); err != nil {
 			return nil, err
 		}

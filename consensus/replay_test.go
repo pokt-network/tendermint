@@ -568,8 +568,8 @@ func TestMockProxyApp(t *testing.T) {
 
 	assert.NotPanics(t, func() {
 		abciResWithEmptyDeliverTx := new(sm.ABCIResponses)
-		abciResWithEmptyDeliverTx.DeliverTxs = make([]*abci.ResponseDeliverTx, 0)
-		abciResWithEmptyDeliverTx.DeliverTxs = append(abciResWithEmptyDeliverTx.DeliverTxs, &abci.ResponseDeliverTx{})
+		abciResWithEmptyDeliverTx.DeliverTx = make([]*abci.ResponseDeliverTx, 0)
+		abciResWithEmptyDeliverTx.DeliverTx = append(abciResWithEmptyDeliverTx.DeliverTx, &abci.ResponseDeliverTx{})
 
 		// called when saveABCIResponses:
 		bytes := cdc.MustMarshalBinaryBare(abciResWithEmptyDeliverTx)
@@ -582,7 +582,7 @@ func TestMockProxyApp(t *testing.T) {
 		mock := newMockProxyApp([]byte("mock_hash"), loadedAbciRes)
 
 		abciRes := new(sm.ABCIResponses)
-		abciRes.DeliverTxs = make([]*abci.ResponseDeliverTx, len(loadedAbciRes.DeliverTxs))
+		abciRes.DeliverTx = make([]*abci.ResponseDeliverTx, len(loadedAbciRes.DeliverTx))
 		// Execute transactions and get hash.
 		proxyCb := func(req *abci.Request, res *abci.Response) {
 			if r, ok := res.Value.(*abci.Response_DeliverTx); ok {
@@ -596,7 +596,7 @@ func TestMockProxyApp(t *testing.T) {
 					logger.Debug("Invalid tx", "code", txRes.Code, "log", txRes.Log)
 					invalidTxs++
 				}
-				abciRes.DeliverTxs[txIndex] = txRes
+				abciRes.DeliverTx[txIndex] = txRes
 				txIndex++
 			}
 		}
@@ -924,7 +924,7 @@ func makeBlocks(n int, state *sm.State, privVal types.PrivValidator) []*types.Bl
 func makeBlock(state sm.State, lastBlock *types.Block, lastBlockMeta *types.BlockMeta,
 	privVal types.PrivValidator, height int64) (*types.Block, *types.PartSet) {
 
-	lastCommit := types.NewCommit(height-1, 0, types.BlockID{}, nil)
+	lastCommit := types.NewCommit(types.BlockID{}, nil)
 	if height > 1 {
 		vote, _ := types.MakeVote(
 			lastBlock.Header.Height,
@@ -933,8 +933,8 @@ func makeBlock(state sm.State, lastBlock *types.Block, lastBlockMeta *types.Bloc
 			privVal,
 			lastBlock.Header.ChainID,
 			time.Now())
-		lastCommit = types.NewCommit(vote.Height, vote.Round,
-			lastBlockMeta.BlockID, []types.CommitSig{vote.CommitSig()})
+		voteCommitSig := vote.CommitSig()
+		lastCommit = types.NewCommit(lastBlockMeta.BlockID, []*types.CommitSig{voteCommitSig})
 	}
 
 	return state.MakeBlock(height, []types.Tx{}, lastCommit, nil, state.Validators.GetProposer().Address)
@@ -1013,7 +1013,7 @@ func makeBlockchainFromWAL(wal WAL) ([]*types.Block, []*types.Commit, error) {
 				if block.Height != height+1 {
 					panic(fmt.Sprintf("read bad block from wal. got height %d, expected %d", block.Height, height+1))
 				}
-				commitHeight := thisBlockCommit.Height
+				commitHeight := thisBlockCommit.Precommits[0].Height
 				if commitHeight != height+1 {
 					panic(fmt.Sprintf("commit doesnt match. got height %d, expected %d", commitHeight, height+1))
 				}
@@ -1030,8 +1030,8 @@ func makeBlockchainFromWAL(wal WAL) ([]*types.Block, []*types.Commit, error) {
 			}
 		case *types.Vote:
 			if p.Type == types.PrecommitType {
-				thisBlockCommit = types.NewCommit(p.Height, p.Round,
-					p.BlockID, []types.CommitSig{p.CommitSig()})
+				commitSigs := []*types.CommitSig{p.CommitSig()}
+				thisBlockCommit = types.NewCommit(p.BlockID, commitSigs)
 			}
 		}
 	}
@@ -1044,7 +1044,7 @@ func makeBlockchainFromWAL(wal WAL) ([]*types.Block, []*types.Commit, error) {
 	if block.Height != height+1 {
 		panic(fmt.Sprintf("read bad block from wal. got height %d, expected %d", block.Height, height+1))
 	}
-	commitHeight := thisBlockCommit.Height
+	commitHeight := thisBlockCommit.Precommits[0].Height
 	if commitHeight != height+1 {
 		panic(fmt.Sprintf("commit doesnt match. got height %d, expected %d", commitHeight, height+1))
 	}

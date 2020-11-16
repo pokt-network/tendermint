@@ -152,7 +152,7 @@ func TestDuplicateVoteEvidenceValidation(t *testing.T) {
 			swap := ev.VoteA.Copy()
 			ev.VoteA = ev.VoteB.Copy()
 			ev.VoteB = swap
-		}, true},
+		}, false},
 	}
 	for _, tc := range testCases {
 		tc := tc
