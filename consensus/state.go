@@ -1100,7 +1100,7 @@ func (cs *State) defaultDoPrevote(height int64, round int) {
 	err := cs.blockExec.ValidateBlock(cs.state, cs.ProposalBlock)
 	if err != nil {
 		// ProposalBlock is invalid, prevote nil.
-		logger.Error("enterPrevote: ProposalBlock is invalid", "err", err)
+		logger.Error("enterPrevote: ProposalBlock is invalid", "err", err, "proposer", cs.ProposalBlock.ProposerAddress.String())
 		cs.signAddVote(types.PrevoteType, nil, types.PartSetHeader{})
 		return
 	}
