@@ -455,7 +455,15 @@ func (r *Reactor) ensurePeers() {
 		"numToDial", numToDial,
 	)
 
-	if numToDial <= 0 {
+	if numToDial == 0 {
+		return
+	}
+
+	if numToDial < 0 {
+		for i := 0; i < numToDial*-1; i++ {
+			ps := r.Switch.Peers().List()
+			r.Switch.StopPeerGracefully(ps[i])
+		}
 		return
 	}
 
