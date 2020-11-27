@@ -4,7 +4,7 @@ import "time"
 
 const (
 	// addresses under which the address manager will claim to need more addresses.
-	needAddressThreshold = 1000
+	needAddressThreshold = 200
 
 	// interval used to dump the address cache to disk for future use.
 	dumpAddressInterval = time.Minute * 2
