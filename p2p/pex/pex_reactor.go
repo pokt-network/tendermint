@@ -35,17 +35,17 @@ const (
 	maxMsgSize = maxAddressSize * maxGetSelection
 
 	// ensure we have enough peers
-	defaultEnsurePeersPeriod = 30 * time.Second
+	defaultEnsurePeersPeriod = 5 * time.Minute
 
 	// Seed/Crawler constants
 
 	// minTimeBetweenCrawls is a minimum time between attempts to crawl a peer.
-	minTimeBetweenCrawls = 2 * time.Minute
+	minTimeBetweenCrawls = 30 * time.Minute
 
 	// check some peers every this
-	crawlPeerPeriod = 30 * time.Second
+	crawlPeerPeriod = 10 * time.Second
 
-	maxAttemptsToDial = 16 // ~ 35h in total (last attempt - 18h)
+	maxAttemptsToDial = 3
 
 	// if node connects to seed, it does not have any trusted peers.
 	// Especially in the beginning, node should have more trusted peers than
@@ -53,7 +53,7 @@ const (
 	biasToSelectNewPeers = 30 // 70 to select good peers
 
 	// if a peer is marked bad, it will be banned for at least this time period
-	defaultBanTime = 24 * time.Hour
+	defaultBanTime = 168 * time.Hour
 )
 
 type errMaxAttemptsToDial struct {
@@ -466,7 +466,7 @@ func (r *Reactor) ensurePeers() {
 
 	toDial := make(map[p2p.ID]*p2p.NetAddress)
 	// Try maxAttempts times to pick numToDial addresses to dial
-	maxAttempts := numToDial * 3
+	maxAttempts := numToDial * 2
 
 	for i := 0; i < maxAttempts && len(toDial) < numToDial; i++ {
 		try := r.book.PickAddress(newBias)

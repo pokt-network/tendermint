@@ -22,7 +22,7 @@ const (
 
 	// repeatedly try to reconnect for a few minutes
 	// ie. 5 * 20 = 100s
-	reconnectAttempts = 20
+	reconnectAttempts = 10
 	reconnectInterval = 5 * time.Second
 
 	// then move into exponential backoff mode for ~1day
