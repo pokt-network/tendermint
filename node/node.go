@@ -15,7 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 
-	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/go-amino"
 	dbm "github.com/tendermint/tm-db"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -63,8 +63,11 @@ type DBProvider func(*DBContext) (dbm.DB, error)
 // DefaultDBProvider returns a database using the DBBackend and DBDir
 // specified in the ctx.Config.
 func DefaultDBProvider(ctx *DBContext) (dbm.DB, error) {
-	dbType := dbm.BackendType(ctx.Config.DBBackend)
-	return dbm.NewDB(ctx.ID, dbType, ctx.Config.DBDir()), nil
+	if ctx.Config.DBBackend == string(dbm.MemDBBackend) {
+		dbType := dbm.BackendType(ctx.Config.DBBackend)
+		return dbm.NewDB(ctx.ID, dbType, ctx.Config.RootDir), nil
+	}
+	return dbm.NewGoLevelDBWithOpts(ctx.ID, ctx.Config.DBDir(), ctx.Config.LevelDBOptions.ToGoLevelDBOpts())
 }
 
 // GenesisDocProvider returns a GenesisDoc.

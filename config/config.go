@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,6 +21,10 @@ const (
 	LogFormatPlain = "plain"
 	// LogFormatJSON is a format for json output
 	LogFormatJSON = "json"
+
+	KiB = 1024
+	MiB = KiB * 1024
+	GiB = MiB * 1024
 )
 
 // NOTE: Most of the structs & relevant comments + the
@@ -176,7 +181,9 @@ type BaseConfig struct { //nolint: maligned
 	//   - EXPERIMENTAL
 	//   - requires gcc
 	//   - use rocksdb build tag (go build -tags rocksdb)
-	DBBackend string `mapstructure:"db_backend"`
+	DBBackend string
+
+	LevelDBOptions LevelDBOptions `mapstructure:"leveldb_opts"`
 
 	// Database directory
 	DBPath string `mapstructure:"db_dir"`
@@ -1006,4 +1013,67 @@ func getDefaultMoniker() string {
 		moniker = "anonymous"
 	}
 	return moniker
+}
+
+// Options holds the optional parameters for the DB at large.
+type LevelDBOptions struct {
+	// BlockCacheCapacity defines the capacity of the 'sorted table' block caching.
+	// Use -1 for zero, this has same effect as specifying NoCacher to BlockCacher.
+	//
+	// The default value is 8MiB.
+	BlockCacheCapacity int `json:"block_cache_capacity"`
+
+	// BlockCacheEvictRemoved allows enable forced-eviction on cached block belonging
+	// to removed 'sorted table'.
+	//
+	// The default if false.
+	BlockCacheEvictRemoved bool `json:"block_cache_evict_removed"`
+
+	// BlockSize is the minimum uncompressed size in bytes of each 'sorted table'
+	// block.
+	//
+	// The default value is 4KiB.
+	BlockSize int `json:"block_size"`
+
+	// DisableBufferPool allows disable use of util.BufferPool functionality.
+	//
+	// The default value is false.
+	DisableBufferPool bool `json:"disable_buffer_pool"`
+
+	// OpenFilesCacheCapacity defines the capacity of the open files caching.
+	// Use -1 for zero, this has same effect as specifying NoCacher to OpenFilesCacher.
+	//
+	// The default value is 500.
+	OpenFilesCacheCapacity int `json:"open_files_cache_capacity"`
+
+	// WriteBuffer defines maximum size of a 'memdb' before flushed to
+	// 'sorted table'. 'memdb' is an in-memory DB backed by an on-disk
+	// unsorted journal.
+	//
+	// LevelDB may held up to two 'memdb' at the same time.
+	//
+	// The default value is 4MiB.
+	WriteBuffer int `json:"write_buffer"`
+}
+
+func DefaultLevelDBOpts() LevelDBOptions {
+	return LevelDBOptions{
+		BlockCacheCapacity:     -1,
+		BlockCacheEvictRemoved: false,
+		BlockSize:              4 * KiB,
+		DisableBufferPool:      true,
+		OpenFilesCacheCapacity: -1,
+		WriteBuffer:            KiB,
+	}
+}
+
+func (ldb LevelDBOptions) ToGoLevelDBOpts() *opt.Options {
+	return &opt.Options{
+		BlockCacheCapacity:     ldb.BlockCacheCapacity,
+		BlockCacheEvictRemoved: ldb.BlockCacheEvictRemoved,
+		BlockSize:              ldb.BlockSize,
+		DisableBufferPool:      ldb.DisableBufferPool,
+		OpenFilesCacheCapacity: ldb.OpenFilesCacheCapacity,
+		WriteBuffer:            ldb.WriteBuffer,
+	}
 }
