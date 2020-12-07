@@ -459,14 +459,6 @@ func (r *Reactor) ensurePeers() {
 		return
 	}
 
-	if numToDial < 0 {
-		for i := 0; i < numToDial*-1; i++ {
-			ps := r.Switch.Peers().List()
-			r.Switch.StopPeerGracefully(ps[i])
-		}
-		return
-	}
-
 	// bias to prefer more vetted peers when we have fewer connections.
 	// not perfect, but somewhate ensures that we prioritize connecting to more-vetted
 	// NOTE: range here is [10, 90]. Too high ?
