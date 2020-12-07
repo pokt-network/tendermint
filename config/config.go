@@ -1058,12 +1058,12 @@ type LevelDBOptions struct {
 
 func DefaultLevelDBOpts() LevelDBOptions {
 	return LevelDBOptions{
-		BlockCacheCapacity:     -1,
+		BlockCacheCapacity:     opt.DefaultBlockCacheCapacity,
 		BlockCacheEvictRemoved: false,
-		BlockSize:              4 * KiB,
+		BlockSize:              opt.DefaultBlockSize,
 		DisableBufferPool:      true,
 		OpenFilesCacheCapacity: -1,
-		WriteBuffer:            KiB,
+		WriteBuffer:            opt.DefaultWriteBuffer,
 	}
 }
 
