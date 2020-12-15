@@ -95,7 +95,7 @@ func DefaultNewNode(config *cfg.Config, logger log.Logger) (*Node, error) {
 		return nil, fmt.Errorf("failed to load or gen node key %s: %w", config.NodeKeyFile(), err)
 	}
 
-	return NewNode(config,
+	return NewNode(nil, config,
 		privval.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.DefaultClientCreator(config.ProxyApp, config.ABCI, config.DBDir()),
@@ -542,8 +542,15 @@ func createPEXReactorAndAddToSwitch(addrBook pex.AddrBook, config *cfg.Config,
 	return pexReactor
 }
 
+// App is the interface of the baseApp that will be passed to tendermint
+type BaseApp interface {
+	SetTxIndexer(txIndexer txindex.TxIndexer)
+	SetBlockstore(bs *store.BlockStore)
+	SetTendermintNode(n *Node)
+}
+
 // NewNode returns a new, ready to go, Tendermint Node.
-func NewNode(config *cfg.Config,
+func NewNode(baseApp BaseApp, config *cfg.Config,
 	privValidator types.PrivValidator,
 	nodeKey *p2p.NodeKey,
 	clientCreator proxy.ClientCreator,
@@ -582,6 +589,11 @@ func NewNode(config *cfg.Config,
 	indexerService, txIndexer, err := createAndStartIndexerService(config, dbProvider, eventBus, logger)
 	if err != nil {
 		return nil, err
+	}
+
+	if baseApp != nil {
+		baseApp.SetTxIndexer(txIndexer)
+		baseApp.SetBlockstore(blockStore)
 	}
 
 	// Create the handshaker, which calls RequestInfo, sets the AppVersion on the state,
@@ -733,6 +745,10 @@ func NewNode(config *cfg.Config,
 
 	for _, option := range options {
 		option(node)
+	}
+
+	if baseApp != nil {
+		baseApp.SetTendermintNode(node)
 	}
 
 	return node, nil
