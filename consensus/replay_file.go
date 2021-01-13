@@ -124,7 +124,7 @@ func (pb *playback) replayReset(count int, newStepSub types.Subscription) error 
 	pb.cs.Stop()
 	pb.cs.Wait()
 
-	newCS := NewState(pb.cs.config, pb.genesisState.Copy(), pb.cs.blockExec,
+	newCS := NewState(pb.cs.config, pb.genesisState.Copy(), 0, pb.cs.blockExec,
 		pb.cs.blockStore, pb.cs.txNotifier, pb.cs.evpool)
 	newCS.SetEventBus(pb.cs.eventBus)
 	newCS.startForReplay()
@@ -314,7 +314,7 @@ func newConsensusStateForReplay(config cfg.BaseConfig, csConfig *cfg.ConsensusCo
 	mempool, evpool := mock.Mempool{}, sm.MockEvidencePool{}
 	blockExec := sm.NewBlockExecutor(stateDB, log.TestingLogger(), proxyApp.Consensus(), mempool, evpool, nil)
 
-	consensusState := NewState(csConfig, state.Copy(), blockExec,
+	consensusState := NewState(csConfig, state.Copy(), 0, blockExec,
 		blockStore, mempool, evpool)
 
 	consensusState.SetEventBus(eventBus)

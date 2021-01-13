@@ -379,7 +379,7 @@ func newStateWithConfigAndBlockStore(
 	stateDB := blockDB
 	sm.SaveState(stateDB, state) //for save height 1's validators info
 	blockExec := sm.NewBlockExecutor(stateDB, log.TestingLogger(), proxyAppConnCon, mempool, evpool, nil)
-	cs := NewState(thisConfig.Consensus, state, blockExec, blockStore, mempool, evpool)
+	cs := NewState(thisConfig.Consensus, state, 0, blockExec, blockStore, mempool, evpool)
 	cs.SetLogger(log.TestingLogger().With("module", "consensus"))
 	cs.SetPrivValidator(pv)
 

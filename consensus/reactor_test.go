@@ -161,7 +161,7 @@ func TestReactorWithEvidence(t *testing.T) {
 
 		// Make State
 		blockExec := sm.NewBlockExecutor(stateDB, log.TestingLogger(), proxyAppConnCon, mempool, evpool, nil)
-		cs := NewState(thisConfig.Consensus, state, blockExec, blockStore, mempool, evpool)
+		cs := NewState(thisConfig.Consensus, state, 0, blockExec, blockStore, mempool, evpool)
 		cs.SetLogger(log.TestingLogger().With("module", "consensus"))
 		cs.SetPrivValidator(pv)
 

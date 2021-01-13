@@ -134,6 +134,9 @@ type State struct {
 
 	// for reporting metrics
 	metrics *Metrics
+
+	// height of consensus upgrade
+	UpgradeHeight int64
 }
 
 // StateOption sets an optional parameter on the State.
@@ -143,6 +146,7 @@ type StateOption func(*State)
 func NewState(
 	config *cfg.ConsensusConfig,
 	state sm.State,
+	upgradeHeight int64,
 	blockExec *sm.BlockExecutor,
 	blockStore sm.BlockStore,
 	txNotifier txNotifier,
@@ -164,6 +168,7 @@ func NewState(
 		evpool:           evpool,
 		evsw:             tmevents.NewEventSwitch(),
 		metrics:          NopMetrics(),
+		UpgradeHeight:    upgradeHeight,
 	}
 	// set function defaults (may be overwritten before calling Start)
 	cs.decideProposal = cs.defaultDecideProposal
@@ -954,7 +959,15 @@ func (cs *State) enterPropose(height int64, round int) {
 }
 
 func (cs *State) isProposer(address []byte) bool {
-	return bytes.Equal(cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash(), uint64(cs.Round)).Address, address)
+	var lastCommitBytes []byte
+	var err error
+	if cs.UpgradeHeight != 0 && cs.Height >= cs.UpgradeHeight {
+		lastCommitBytes, err = cs.LastCommit.MarshalJSON()
+		if err != nil {
+			panic(err)
+		}
+	}
+	return bytes.Equal(cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash(), cs.UpgradeHeight, cs.Height, lastCommitBytes, uint64(cs.Round)).Address, address)
 }
 
 func (cs *State) defaultDecideProposal(height int64, round int) {
@@ -1606,8 +1619,16 @@ func (cs *State) defaultSetProposal(proposal *types.Proposal) error {
 		return ErrInvalidProposalPOLRound
 	}
 
+	var lastCommitBytes []byte
+	var err error
+	if cs.UpgradeHeight != 0 && cs.Height >= cs.UpgradeHeight {
+		lastCommitBytes, err = cs.LastCommit.MarshalJSON()
+		if err != nil {
+			panic(err)
+		}
+	}
 	// Verify signature
-	if !cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash(), uint64(cs.Round)).PubKey.VerifyBytes(proposal.SignBytes(cs.state.ChainID), proposal.Signature) {
+	if !cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash(), cs.UpgradeHeight, cs.Height, lastCommitBytes, uint64(cs.Round)).PubKey.VerifyBytes(proposal.SignBytes(cs.state.ChainID), proposal.Signature) {
 		return ErrInvalidProposalSignature
 	}
 

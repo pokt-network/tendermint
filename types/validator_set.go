@@ -322,10 +322,14 @@ func (vals *ValidatorSet) findProposer() *Validator {
 }
 
 // Pocket Network's custom addition to tendermint selection
-func (vals *ValidatorSet) GetProposerRandomized(previousBlockHash []byte, round uint64) *Validator {
+func (vals *ValidatorSet) GetProposerRandomized(previousBlockHash []byte, upgradeHeight, height int64, lastCommit []byte, round uint64) *Validator {
 	roundBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(roundBz, round)
-	previousBlockHash = tmhash.Sum(append(previousBlockHash, roundBz...))
+	if upgradeHeight != 0 && height >= upgradeHeight {
+		previousBlockHash = tmhash.Sum(append(append(previousBlockHash, lastCommit...), roundBz...))
+	} else {
+		previousBlockHash = tmhash.Sum(append(previousBlockHash, roundBz...))
+	}
 	if len(vals.Validators) == 0 {
 		return nil
 	}

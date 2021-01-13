@@ -95,7 +95,7 @@ func DefaultNewNode(config *cfg.Config, logger log.Logger) (*Node, error) {
 		return nil, fmt.Errorf("failed to load or gen node key %s: %w", config.NodeKeyFile(), err)
 	}
 
-	return NewNode(nil, config,
+	return NewNode(nil, config, 0,
 		privval.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.DefaultClientCreator(config.ProxyApp, config.ABCI, config.DBDir()),
@@ -365,6 +365,7 @@ func createConsensusReactor(config *cfg.Config,
 	state sm.State,
 	blockExec *sm.BlockExecutor,
 	blockStore sm.BlockStore,
+	upgradeHeight int64,
 	mempool *mempl.CListMempool,
 	evidencePool *evidence.Pool,
 	privValidator types.PrivValidator,
@@ -376,6 +377,7 @@ func createConsensusReactor(config *cfg.Config,
 	consensusState := cs.NewState(
 		config.Consensus,
 		state.Copy(),
+		upgradeHeight,
 		blockExec,
 		blockStore,
 		mempool,
@@ -551,6 +553,7 @@ type BaseApp interface {
 
 // NewNode returns a new, ready to go, Tendermint Node.
 func NewNode(baseApp BaseApp, config *cfg.Config,
+	upgradeHeight int64,
 	privValidator types.PrivValidator,
 	nodeKey *p2p.NodeKey,
 	clientCreator proxy.ClientCreator,
@@ -659,7 +662,7 @@ func NewNode(baseApp BaseApp, config *cfg.Config,
 
 	// Make ConsensusReactor
 	consensusReactor, consensusState := createConsensusReactor(
-		config, state, blockExec, blockStore, mempool, evidencePool,
+		config, state, blockExec, blockStore, upgradeHeight, mempool, evidencePool,
 		privValidator, csMetrics, fastSync, eventBus, consensusLogger,
 	)
 
