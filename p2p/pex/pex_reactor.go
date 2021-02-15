@@ -35,7 +35,7 @@ const (
 	maxMsgSize = maxAddressSize * maxGetSelection
 
 	// ensure we have enough peers
-	defaultEnsurePeersPeriod = 5 * time.Minute
+	defaultEnsurePeersPeriod = 2 * time.Minute
 
 	// Seed/Crawler constants
 
@@ -53,7 +53,7 @@ const (
 	biasToSelectNewPeers = 30 // 70 to select good peers
 
 	// if a peer is marked bad, it will be banned for at least this time period
-	defaultBanTime = 168 * time.Hour
+	defaultBanTime = 24 * time.Hour
 )
 
 type errMaxAttemptsToDial struct {
