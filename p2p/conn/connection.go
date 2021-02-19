@@ -850,10 +850,14 @@ func (ch *Channel) recvPacketMsg(packet PacketMsg) ([]byte, error) {
 		return nil, fmt.Errorf("received message exceeds available capacity: %v < %v", recvCap, recvReceived)
 	}
 	ch.recving = append(ch.recving, packet.Bytes...)
-
 	if packet.EOF == byte(0x01) {
 		msgBytes := ch.recving
-		ch.recving = nil
+
+		// clear the slice without re-allocating.
+		// http://stackoverflow.com/questions/16971741/how-do-you-clear-a-slice-in-go
+		//   suggests this could be a memory leak, but we might as well keep the memory for the channel until it closes,
+		//	at which point the recving slice stops being used and should be garbage collected
+		ch.recving = ch.recving[:0] // make([]byte, 0, ch.desc.RecvBufferCapacity)
 		return msgBytes, nil
 	}
 	return nil, nil
