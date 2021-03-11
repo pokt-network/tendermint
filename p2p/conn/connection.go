@@ -253,10 +253,18 @@ func (c *MConnection) stopServices() (alreadyStopped bool) {
 	default:
 	}
 
+	c.Logger.Debug("Starting BaseService.OnStop()")
 	c.BaseService.OnStop()
+	c.Logger.Debug("Ending BaseService.OnStop")
+	c.Logger.Debug("Starting flushTimer.Stop()")
 	c.flushTimer.Stop()
+	c.Logger.Debug("Ending flushTimer.Stop()")
+	c.Logger.Debug("Starting pingTimer.Stop()")
 	c.pingTimer.Stop()
+	c.Logger.Debug("Ending pingTimer.Stop()")
+	c.Logger.Debug("Starting chStatsTimer.Stop()")
 	c.chStatsTimer.Stop()
+	c.Logger.Debug("Ending chStatsTimer.Stop()")
 
 	// inform the recvRouting that we are shutting down
 	close(c.quitRecvRoutine)
@@ -559,18 +567,17 @@ FOR_LOOP:
 		c.recvMonitor.Limit(c._maxPacketMsgSize, atomic.LoadInt64(&c.config.RecvRate), true)
 
 		// Peek into bufConnReader for debugging
-		/*
-			if numBytes := c.bufConnReader.Buffered(); numBytes > 0 {
-				bz, err := c.bufConnReader.Peek(tmmath.MinInt(numBytes, 100))
-				if err == nil {
-					// return
-				} else {
-					c.Logger.Debug("Error peeking connection buffer", "err", err)
-					// return nil
-				}
-				c.Logger.Info("Peek connection buffer", "numBytes", numBytes, "bz", bz)
+		//TODO peeking
+		if numBytes := c.bufConnReader.Buffered(); numBytes > 0 {
+			bz, err := c.bufConnReader.Peek(tmmath.MinInt(numBytes, 100))
+			if err == nil {
+				// return
+			} else {
+				c.Logger.Debug("Error peeking connection buffer", "err", err)
+				// return nil
 			}
-		*/
+			c.Logger.Info("Peek connection buffer", "numBytes", numBytes, "bz", bz)
+		}
 
 		// Read packet type
 		var packet Packet

@@ -315,10 +315,13 @@ func TestDeriveSecretsAndChallengeGolden(t *testing.T) {
 		require.Nil(t, err)
 		expectedSendSecret, err := hex.DecodeString(params[3])
 		require.Nil(t, err)
+		expectedChallenge, err := hex.DecodeString(params[4])
+		require.Nil(t, err)
 
-		recvSecret, sendSecret := deriveSecrets(randSecret, locIsLeast)
+		recvSecret, sendSecret, challenge := deriveSecretAndChallenge(randSecret, locIsLeast)
 		require.Equal(t, expectedRecvSecret, (*recvSecret)[:], "Recv Secrets aren't equal")
 		require.Equal(t, expectedSendSecret, (*sendSecret)[:], "Send Secrets aren't equal")
+		require.Equal(t, expectedChallenge, (*challenge)[:], "challenges aren't equal")
 	}
 }
 
@@ -379,9 +382,10 @@ func createGoldenTestVectors(t *testing.T) string {
 		data += hex.EncodeToString((*randSecret)[:]) + ","
 		locIsLeast := tmrand.Bool()
 		data += strconv.FormatBool(locIsLeast) + ","
-		recvSecret, sendSecret := deriveSecrets(randSecret, locIsLeast)
+		recvSecret, sendSecret, challenge := deriveSecretAndChallenge(randSecret, locIsLeast)
 		data += hex.EncodeToString((*recvSecret)[:]) + ","
 		data += hex.EncodeToString((*sendSecret)[:]) + ","
+		data += hex.EncodeToString((*challenge)[:]) + "\n"
 	}
 	return data
 }
