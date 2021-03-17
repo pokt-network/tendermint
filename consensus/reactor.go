@@ -28,8 +28,8 @@ const (
 
 	maxMsgSize = 1048576 // 1MB; NOTE/TODO: keep in sync with types.PartSet sizes.
 
-	blocksToContributeToBecomeGoodPeer = 10000
-	votesToContributeToBecomeGoodPeer  = 10000
+	blocksToContributeToBecomeGoodPeer = 8
+	votesToContributeToBecomeGoodPeer  = 8
 )
 
 //-----------------------------------------------------------------------------

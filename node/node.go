@@ -536,7 +536,7 @@ func createPEXReactorAndAddToSwitch(addrBook pex.AddrBook, config *cfg.Config,
 			// TODO (melekes): make it dynamic based on the actual block latencies
 			// from the live network.
 			// https://github.com/tendermint/tendermint/issues/3523
-			SeedDisconnectWaitPeriod:     28 * time.Hour,
+			SeedDisconnectWaitPeriod:     1 * time.Hour,
 			PersistentPeersMaxDialPeriod: config.P2P.PersistentPeersMaxDialPeriod,
 		})
 	pexReactor.SetLogger(logger.With("module", "pex"))
