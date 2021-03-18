@@ -576,7 +576,7 @@ FOR_LOOP:
 				c.Logger.Debug("Error peeking connection buffer", "err", err)
 				// return nil
 			}
-			c.Logger.Info("Peek connection buffer", "numBytes", numBytes, "bz", bz)
+			c.Logger.Debug("Peek connection buffer", "numBytes", numBytes, "bz", bz)
 		}
 
 		// Read packet type
