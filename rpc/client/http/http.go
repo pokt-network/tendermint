@@ -407,22 +407,6 @@ func (c *baseRPCClient) TxSearch(query string, prove bool, page, perPage int, or
 	return result, nil
 }
 
-func (c *baseRPCClient) ReducedTxSearch(query string, prove bool, page, perPage int, orderBy string) (
-	*ctypes.ResultTxSearch, error) {
-	result := new(ctypes.ResultTxSearch)
-	params := map[string]interface{}{
-		"query":    query,
-		"prove":    prove,
-		"page":     page,
-		"per_page": perPage,
-		"order_by": orderBy,
-	}
-	_, err := c.caller.Call("reduced_tx_search", params, result)
-	if err != nil {
-		return nil, errors.Wrap(err, "ReducedTxSearch")
-	}
-	return result, nil
-}
 func (c *baseRPCClient) Validators(height *int64, page, perPage int) (*ctypes.ResultValidators, error) {
 	result := new(ctypes.ResultValidators)
 	_, err := c.caller.Call("validators", map[string]interface{}{
