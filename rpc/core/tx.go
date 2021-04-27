@@ -106,7 +106,7 @@ func ReducedTxSearch(ctx *rpctypes.Context, query string, prove bool, page, perP
 	}
 	q.AddPage(perPage, validateSkipCount(page, perPage), orderBy)
 
-	results, err := env.TxIndexer.ReducedSearch(ctx.Context(), q)
+	results, err := env.TxIndexer.Search(ctx.Context(), q)
 	if err != nil {
 		return nil, err
 	}
