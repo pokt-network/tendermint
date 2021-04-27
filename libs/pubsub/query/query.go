@@ -64,9 +64,6 @@ func MustParse(s string) *Query {
 	return q
 }
 func (q *Query) AddPage(size int, skip int, sort string) {
-	if size > 100 {
-		size = 100
-	}
 	q.Pagination = &Page{size, skip, sort}
 }
 

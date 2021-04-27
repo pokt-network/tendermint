@@ -195,6 +195,9 @@ message ResponseDeliverTx {
   repeated Event events     = 7
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
   string codespace = 8;
+  bytes signer = 9; // pocket network addition for custom tx indexer
+  bytes recepient = 10; // pocket network addition for custom  tx indexer
+  string message_type = 11; // pocket network addition for custom  tx indexer
 }
 
 message ResponseEndBlock {
