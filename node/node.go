@@ -99,6 +99,7 @@ func DefaultNewNode(config *cfg.Config, logger log.Logger) (*Node, error) {
 		privval.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.DefaultClientCreator(config.ProxyApp, config.ABCI, config.DBDir()),
+		nil,
 		DefaultGenesisDocProviderFunc(config),
 		DefaultDBProvider,
 		DefaultMetricsProvider(config.Instrumentation),
@@ -250,6 +251,16 @@ func createAndStartIndexerService(config *cfg.Config, dbProvider DBProvider,
 		return nil, nil, err
 	}
 	return indexerService, txIndexer, nil
+}
+
+func startCustomIndexerService(txIndexer txindex.TxIndexer, eventBus *types.EventBus,
+	logger log.Logger) (*txindex.IndexerService, error) {
+	indexerService := txindex.NewIndexerService(txIndexer, eventBus)
+	indexerService.SetLogger(logger.With("module", "txindex"))
+	if err := indexerService.Start(); err != nil {
+		return nil, err
+	}
+	return indexerService, nil
 }
 
 func doHandshake(
@@ -557,6 +568,7 @@ func NewNode(baseApp BaseApp, config *cfg.Config,
 	privValidator types.PrivValidator,
 	nodeKey *p2p.NodeKey,
 	clientCreator proxy.ClientCreator,
+	txIndexer txindex.TxIndexer,
 	genesisDocProvider GenesisDocProvider,
 	dbProvider DBProvider,
 	metricsProvider MetricsProvider,
@@ -587,13 +599,16 @@ func NewNode(baseApp BaseApp, config *cfg.Config,
 	if err != nil {
 		return nil, err
 	}
-
+	var indexerService *txindex.IndexerService
 	// Transaction indexing
-	indexerService, txIndexer, err := createAndStartIndexerService(config, dbProvider, eventBus, logger)
+	if txIndexer != nil {
+		indexerService, err = startCustomIndexerService(txIndexer, eventBus, logger)
+	} else {
+		indexerService, txIndexer, err = createAndStartIndexerService(config, dbProvider, eventBus, logger)
+	}
 	if err != nil {
 		return nil, err
 	}
-
 	if baseApp != nil {
 		baseApp.SetTxIndexer(txIndexer)
 		baseApp.SetBlockstore(blockStore)
