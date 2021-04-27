@@ -1704,9 +1704,9 @@ type ResponseDeliverTx struct {
 	GasUsed              int64    `protobuf:"varint,6,opt,name=gas_used,json=gasUsed,proto3" json:"gas_used,omitempty"`
 	Events               []Event  `protobuf:"bytes,7,rep,name=events,proto3" json:"events,omitempty"`
 	Codespace            string   `protobuf:"bytes,8,opt,name=codespace,proto3" json:"codespace,omitempty"`
-	Signer               []byte   `protobuf:"bytes,9,opt,name=codespace,proto3" json:"signer,omitempty"`
-	Recipient            []byte   `protobuf:"bytes,10,opt,name=codespace,proto3" json:"recipient,omitempty"`
-	MessageType          string   `protobuf:"bytes,11,opt,name=codespace,proto3" json:"message_type,omitempty"`
+	Signer               []byte   `protobuf:"bytes,9,opt,name=signer,proto3" json:"signer,omitempty"`
+	Recipient            []byte   `protobuf:"bytes,10,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	MessageType          string   `protobuf:"bytes,11,opt,name=message_type,proto3" json:"message_type,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
