@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -686,37 +687,18 @@ func (vals *ValidatorSet) UpdateWithChangeSet(changes []*Validator) error {
 func (vals *ValidatorSet) VerifyCommit(chainID string, blockID BlockID,
 	height int64, commit *Commit) error {
 
+	defer TimeTrack(time.Now(), nil)
+
 	if vals.Size() != len(commit.Precommits) {
 		return NewErrInvalidCommitSignatures(vals.Size(), len(commit.Precommits))
 	}
-	if err := verifyCommitBasic(commit, height, blockID); err != nil {
-		return err
-	}
-
 	talliedVotingPower := int64(0)
 	votingPowerNeeded := vals.TotalVotingPower() * 2 / 3
-	for idx, commitSig := range commit.Precommits {
-		if commitSig == nil {
-			continue // OK, some signatures can be absent.
-		}
 
-		// The vals and commit have a 1-to-1 correspondance.
-		// This means we don't need the validator address or to do any lookup.
-		val := vals.Validators[idx]
+	err, talliedVotingPower := verifyCommitBasicAndPower(commit, height, blockID, chainID, vals, talliedVotingPower)
 
-		// Validate signature.
-		voteSignBytes := commit.VoteSignBytes(chainID, idx)
-		if !val.PubKey.VerifyBytes(voteSignBytes, commitSig.Signature) {
-			return fmt.Errorf("wrong signature (#%d): %X", idx, commitSig.Signature)
-		}
-		// Good!
-		if blockID.Equals(commit.BlockID) {
-			talliedVotingPower += val.VotingPower
-		}
-		// else {
-		// It's OK that the BlockID doesn't match.  We include stray
-		// signatures (~votes for nil) to measure validator availability.
-		// }
+	if err != nil {
+		return err
 	}
 
 	if got, needed := talliedVotingPower, votingPowerNeeded; got <= needed {
@@ -736,6 +718,7 @@ func (vals *ValidatorSet) VerifyCommit(chainID string, blockID BlockID,
 // signatures.
 func (vals *ValidatorSet) VerifyCommitLight(chainID string, blockID BlockID,
 	height int64, commit *Commit) error {
+	defer TimeTrack(time.Now(), nil)
 
 	if vals.Size() != len(commit.Precommits) {
 		return NewErrInvalidCommitSignatures(vals.Size(), len(commit.Precommits))
@@ -937,6 +920,22 @@ func verifyCommitBasic(commit *Commit, height int64, blockID BlockID) error {
 			blockID, commit.BlockID)
 	}
 	return nil
+}
+
+func verifyCommitBasicAndPower(commit *Commit, height int64, blockID BlockID, chainID string, vals *ValidatorSet, talliedPower int64) (error, int64) {
+	err, talliedPower := commit.ValidateBasicAndPower(blockID, chainID, vals, talliedPower)
+
+	if err != nil {
+		return err, 0
+	}
+	if height != commit.Height() {
+		return NewErrInvalidCommitHeight(height, commit.Height()), 0
+	}
+	if !blockID.Equals(commit.BlockID) {
+		return fmt.Errorf("invalid commit -- wrong block ID: want %v, got %v",
+			blockID, commit.BlockID), 0
+	}
+	return nil, talliedPower
 }
 
 //-----------------
