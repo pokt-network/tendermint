@@ -419,6 +419,8 @@ func (h *Handshaker) replayBlocks(
 	appBlockHeight,
 	storeBlockHeight int64,
 	mutateState bool, indexer txindex.TxIndexer) ([]byte, error) {
+	defer types.TimeTrack(time.Now(), h.logger)
+
 	// App is further behind than it should be, so we need to replay blocks.
 	// We replay all blocks from appBlockHeight+1.
 	//
@@ -466,6 +468,8 @@ func (h *Handshaker) replayBlocks(
 
 // ApplyBlock on the proxyApp with the last block.
 func (h *Handshaker) replayBlock(state sm.State, height int64, proxyApp proxy.AppConnConsensus, indexer txindex.TxIndexer) (sm.State, error) {
+	defer types.TimeTrack(time.Now(), h.logger)
+
 	block := h.store.LoadBlock(height)
 	meta := h.store.LoadBlockMeta(height)
 

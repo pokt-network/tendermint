@@ -1291,6 +1291,7 @@ func (cs *State) enterPrecommitWait(height int64, round int) {
 
 // Enter: +2/3 precommits for block
 func (cs *State) enterCommit(height int64, commitRound int) {
+	defer types.TimeTrack(time.Now(), cs.Logger)
 	logger := cs.Logger.With("height", height, "commitRound", commitRound)
 
 	if cs.Height != height || cstypes.RoundStepCommit <= cs.Step {
@@ -1355,6 +1356,8 @@ func (cs *State) enterCommit(height int64, commitRound int) {
 
 // If we have the block AND +2/3 commits for it, finalize.
 func (cs *State) tryFinalizeCommit(height int64) {
+	defer types.TimeTrack(time.Now(), cs.Logger)
+
 	logger := cs.Logger.With("height", height)
 
 	if cs.Height != height {
@@ -1384,6 +1387,8 @@ func (cs *State) tryFinalizeCommit(height int64) {
 
 // Increment height and goto cstypes.RoundStepNewHeight
 func (cs *State) finalizeCommit(height int64) {
+	defer types.TimeTrack(time.Now(), cs.Logger)
+
 	if cs.Height != height || cs.Step != cstypes.RoundStepCommit {
 		cs.Logger.Debug(fmt.Sprintf(
 			"finalizeCommit(%v): Invalid args. Current step: %v/%v/%v",

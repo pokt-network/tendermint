@@ -872,6 +872,62 @@ func (commit *Commit) ValidateBasic() error {
 	return nil
 }
 
+func (commit *Commit) ValidateBasicAndPower(blockID BlockID, chainID string, vals *ValidatorSet, talliedVotingPower int64) (error, int64) {
+	if commit.Height() >= 1 {
+		if commit.BlockID.IsZero() {
+			return errors.New("Commit cannot be for nil block"), 0
+		}
+		if len(commit.Precommits) == 0 {
+			return errors.New("No precommits in commit"), 0
+		}
+		height, round := commit.Height(), commit.Round()
+
+		// Validate the precommits.
+		for idx, precommit := range commit.Precommits {
+			// It's OK for precommits to be missing.
+			if precommit == nil {
+				continue
+			}
+			// Ensure that all votes are precommits.
+			if precommit.Type != PrecommitType {
+				return fmt.Errorf("Invalid commit vote. Expected precommit, got %v",
+					precommit.Type), 0
+			}
+			// Ensure that all heights are the same.
+			if precommit.Height != height {
+				return fmt.Errorf("Invalid commit precommit height. Expected %v, got %v",
+					height, precommit.Height), 0
+			}
+			// Ensure that all rounds are the same.
+			if precommit.Round != round {
+				return fmt.Errorf("Invalid commit precommit round. Expected %v, got %v",
+					round, precommit.Round), 0
+			}
+
+			// The vals and commit have a 1-to-1 correspondance.
+			// This means we don't need the validator address or to do any lookup.
+			val := vals.Validators[idx]
+
+			// Validate signature.
+			voteSignBytes := commit.VoteSignBytes(chainID, idx)
+			if !val.PubKey.VerifyBytes(voteSignBytes, precommit.Signature) {
+				return fmt.Errorf("wrong signature (#%d): %X", idx, precommit.Signature), 0
+			}
+			// Good!
+			if blockID.Equals(commit.BlockID) {
+				talliedVotingPower += val.VotingPower
+			}
+			// else {
+			// It's OK that the BlockID doesn't match.  We include stray
+			// signatures (~votes for nil) to measure validator availability.
+			// }
+
+		}
+	}
+
+	return nil, talliedVotingPower
+}
+
 // Hash returns the hash of the commit
 func (commit *Commit) Hash() tmbytes.HexBytes {
 	if commit == nil {

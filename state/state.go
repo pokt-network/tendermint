@@ -137,6 +137,7 @@ func (state State) MakeBlock(
 	evidence []types.Evidence,
 	proposerAddress []byte,
 ) (*types.Block, *types.PartSet) {
+	defer types.TimeTrack(time.Now(), nil)
 
 	// Build base block with block data.
 	block := types.MakeBlock(height, txs, commit, evidence)

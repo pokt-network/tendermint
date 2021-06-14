@@ -152,7 +152,7 @@ func newTestReactor(p testReactorParams) *BlockchainReactor {
 			panic(errors.Wrap(err, "error start app"))
 		}
 		db := dbm.NewMemDB()
-		appl = sm.NewBlockExecutor(db, p.logger, proxyApp.Consensus(), mock.Mempool{}, sm.MockEvidencePool{})
+		appl = sm.NewBlockExecutor(db, p.logger, proxyApp.Consensus(), mock.Mempool{}, sm.MockEvidencePool{}, nil)
 		sm.SaveState(db, state)
 	}
 
@@ -494,12 +494,12 @@ func newReactorStore(
 
 	db := dbm.NewMemDB()
 	blockExec := sm.NewBlockExecutor(db, log.TestingLogger(), proxyApp.Consensus(),
-		mock.Mempool{}, sm.MockEvidencePool{})
+		mock.Mempool{}, sm.MockEvidencePool{}, nil)
 	sm.SaveState(db, state)
 
 	// add blocks in
 	for blockHeight := int64(1); blockHeight <= maxBlockHeight; blockHeight++ {
-		lastCommit := types.NewCommit(blockHeight-1, 0, types.BlockID{}, nil)
+		lastCommit := types.NewCommit(types.BlockID{}, make([]*types.CommitSig, 0))
 		if blockHeight > 1 {
 			lastBlockMeta := blockStore.LoadBlockMeta(blockHeight - 1)
 			lastBlock := blockStore.LoadBlock(blockHeight - 1)
@@ -514,8 +514,7 @@ func newReactorStore(
 			if err != nil {
 				panic(err)
 			}
-			lastCommit = types.NewCommit(vote.Height, vote.Round,
-				lastBlockMeta.BlockID, []types.CommitSig{vote.CommitSig()})
+			lastCommit = types.NewCommit(lastBlockMeta.BlockID, []*types.CommitSig{vote.CommitSig()})
 		}
 
 		thisBlock := makeBlock(blockHeight, state, lastCommit)

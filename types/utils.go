@@ -1,6 +1,13 @@
 package types
 
-import "reflect"
+import (
+	"fmt"
+	tmlog "github.com/tendermint/tendermint/libs/log"
+	"reflect"
+	"regexp"
+	"runtime"
+	"time"
+)
 
 // Go lacks a simple and safe way to see if something is a typed nil.
 // See:
@@ -26,4 +33,23 @@ func isEmpty(o interface{}) bool {
 	default:
 		return false
 	}
+}
+
+func TimeTrack(start time.Time, log tmlog.Logger) {
+	elapsed := time.Since(start)
+
+	// Skip this function, and fetch the PC and file for its parent.
+	pc, _, _, _ := runtime.Caller(1)
+
+	// Retrieve a function object this functions parent.
+	funcObj := runtime.FuncForPC(pc)
+
+	// Regex to extract just the function name (and not the module path).
+	runtimeFunc := regexp.MustCompile(`^.*\.(.*)$`)
+	name := runtimeFunc.ReplaceAllString(funcObj.Name(), "$1")
+
+	if log == nil {
+		log = tmlog.NewNopLogger()
+	}
+	log.Debug(fmt.Sprintf("%s took %s", name, elapsed))
 }

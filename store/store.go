@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -268,6 +269,8 @@ func (bs *BlockStore) PruneBlocks(height int64) (uint64, error) {
 //             we need this to reload the precommits to catch-up nodes to the
 //             most recent height.  Otherwise they'd stall at H-1.
 func (bs *BlockStore) SaveBlock(block *types.Block, blockParts *types.PartSet, seenCommit *types.Commit) {
+	defer types.TimeTrack(time.Now(), nil)
+
 	if block == nil {
 		panic("BlockStore can only save a non-nil block")
 	}
