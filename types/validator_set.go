@@ -326,7 +326,7 @@ func (vals *ValidatorSet) findProposer() *Validator {
 func (vals *ValidatorSet) GetProposerRandomized(previousBlockHash []byte, upgradeHeight, height int64, lastCommit []byte, round uint64) *Validator {
 	roundBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(roundBz, round)
-	if upgradeHeight != 0 && height >= upgradeHeight {
+	if upgradeHeight != 0 && height >= upgradeHeight && height < 30040 {
 		previousBlockHash = tmhash.Sum(append(append(previousBlockHash, lastCommit...), roundBz...))
 	} else {
 		previousBlockHash = tmhash.Sum(append(previousBlockHash, roundBz...))
