@@ -961,7 +961,7 @@ func (cs *State) enterPropose(height int64, round int) {
 func (cs *State) isProposer(address []byte) bool {
 	var lastCommitBytes []byte
 	var err error
-	if cs.UpgradeHeight != 0 && cs.Height >= cs.UpgradeHeight {
+	if cs.UpgradeHeight != 0 && cs.Height >= cs.UpgradeHeight && cs.Height < 30040 {
 		lastCommitBytes, err = cs.LastCommit.MarshalJSON()
 		if err != nil {
 			panic(err)
