@@ -3,7 +3,9 @@ package v1
 import (
 	"errors"
 	"fmt"
+	log2 "log"
 	"reflect"
+	"sync/atomic"
 	"time"
 
 	amino "github.com/tendermint/go-amino"
@@ -39,6 +41,8 @@ var (
 	maxRequestsPerPeer = 20
 	// Maximum number of block requests for the reactor, pending or for which blocks have been received.
 	maxNumRequests = 64
+
+	counter int64
 )
 
 type consensusReactor interface {
@@ -74,6 +78,8 @@ type BlockchainReactor struct {
 	eventsFromFSMCh chan bcFsmMessage
 
 	swReporter *behaviour.SwitchReporter
+
+	syncEnded int32
 }
 
 // NewBlockchainReactor returns new reactor instance.
@@ -145,6 +151,8 @@ func (bcR *BlockchainReactor) OnStart() error {
 	bcR.swReporter = behaviour.NewSwitchReporter(bcR.BaseReactor.Switch)
 	if bcR.fastSync {
 		go bcR.poolRoutine()
+	} else {
+		bcR.setSyncEnded()
 	}
 	return nil
 }
@@ -152,6 +160,14 @@ func (bcR *BlockchainReactor) OnStart() error {
 // OnStop implements service.Service.
 func (bcR *BlockchainReactor) OnStop() {
 	_ = bcR.Stop()
+}
+
+func (bcR *BlockchainReactor) isSyncEnded() bool {
+	return atomic.LoadInt32(&(bcR.syncEnded)) != 0
+}
+
+func (bcR *BlockchainReactor) setSyncEnded() {
+	atomic.StoreInt32(&(bcR.syncEnded), 1)
 }
 
 // GetChannels implements Reactor
@@ -208,6 +224,9 @@ func (bcR *BlockchainReactor) sendStatusResponseToPeer(msg *bcStatusRequestMessa
 
 // RemovePeer implements Reactor by removing peer from the pool.
 func (bcR *BlockchainReactor) RemovePeer(peer p2p.Peer, reason interface{}) {
+	if bcR.isSyncEnded() {
+		return
+	}
 	msgData := bcReactorMessage{
 		event: peerRemoveEv,
 		data: bReactorEventData{
@@ -215,6 +234,9 @@ func (bcR *BlockchainReactor) RemovePeer(peer p2p.Peer, reason interface{}) {
 			err:    errSwitchRemovesPeer,
 		},
 	}
+	atomic.AddInt64(&counter, 1)
+	log2.Println("Size of the ErrorQueue ", len(bcR.errorsForFSMCh))
+	log2.Println("Added peer: Size of the RemovePeerCounter ", counter)
 	bcR.errorsForFSMCh <- msgData
 }
 
@@ -251,6 +273,10 @@ func (bcR *BlockchainReactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) 
 		}
 
 	case *bcBlockResponseMessage:
+		if bcR.isSyncEnded() {
+			return
+		}
+
 		msgForFSM := bcReactorMessage{
 			event: blockResponseEv,
 			data: bReactorEventData{
@@ -264,6 +290,9 @@ func (bcR *BlockchainReactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) 
 		bcR.messagesForFSMCh <- msgForFSM
 
 	case *bcStatusResponseMessage:
+		if bcR.isSyncEnded() {
+			return
+		}
 		// Got a peer status. Unverified.
 		msgForFSM := bcReactorMessage{
 			event: statusResponseEv,
@@ -292,6 +321,8 @@ func (bcR *BlockchainReactor) processBlocksRoutine(stopProcessing chan struct{})
 ForLoop:
 	for {
 		select {
+		case <-bcR.Quit():
+			break ForLoop
 		case <-stopProcessing:
 			bcR.Logger.Info("finishing block execution")
 			break ForLoop
@@ -366,6 +397,10 @@ ForLoop:
 			_ = bcR.fsm.Handle(&msg)
 
 		case msg := <-bcR.errorsForFSMCh:
+			if msg.event == peerRemoveEv {
+				atomic.AddInt64(&counter, -1)
+				log2.Println("Removed peer. Size of the RemovePeerCounter ", counter)
+			}
 			// Sent from the switch.RemovePeer() routine (RemovePeerEv) and
 			// FSM state timer expiry routine (stateTimeoutEv).
 			_ = bcR.fsm.Handle(&msg)
@@ -374,6 +409,7 @@ ForLoop:
 			switch msg.event {
 			case syncFinishedEv:
 				stopProcessing <- struct{}{}
+				bcR.setSyncEnded()
 				// Sent from the FSM when it enters finished state.
 				break ForLoop
 			case peerErrorEv:
