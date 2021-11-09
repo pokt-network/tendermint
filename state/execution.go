@@ -2,6 +2,7 @@ package state
 
 import (
 	"fmt"
+	"github.com/tendermint/tendermint/health"
 	"github.com/tendermint/tendermint/state/txindex"
 	"time"
 
@@ -39,6 +40,8 @@ type BlockExecutor struct {
 	logger log.Logger
 
 	metrics *Metrics
+
+	healthMetrics *health.HealthMetrics
 
 	indexer txindex.TxIndexer
 }
@@ -82,6 +85,16 @@ func NewBlockExecutor(
 
 func (blockExec *BlockExecutor) DB() dbm.DB {
 	return blockExec.db
+}
+
+// SetHealthMetrics - sets the healthMetrics for the block executor
+func (blockExec *BlockExecutor) SetHealthMetrics(healthMetrics *health.HealthMetrics) {
+	blockExec.healthMetrics = healthMetrics
+}
+
+// GetHealthMetrics - returns the healthMetrics for the block executor
+func (blockExec *BlockExecutor) GetHealthMetrics() *health.HealthMetrics {
+	return blockExec.healthMetrics
 }
 
 // SetEventBus - sets the event bus for publishing block related events.
@@ -133,13 +146,13 @@ func (blockExec *BlockExecutor) ApplyBlock(
 	state State, blockID types.BlockID, block *types.Block,
 ) (State, int64, error) {
 	defer types.TimeTrack(time.Now(), blockExec.logger)
-
+	tt := types.NewTimeTracker()
 	if err := blockExec.ValidateBlock(state, block); err != nil {
 		return state, 0, ErrInvalidBlock(err)
 	}
 
 	startTime := time.Now().UnixNano()
-	abciResponses, err := execBlockOnProxyApp(blockExec.logger, blockExec.proxyApp, block, blockExec.db)
+	abciResponses, err := execBlockOnProxyApp(blockExec.logger, blockExec.proxyApp, block, blockExec.db, blockExec.healthMetrics)
 	endTime := time.Now().UnixNano()
 	blockExec.metrics.BlockProcessingTime.Observe(float64(endTime-startTime) / 1000000)
 	if err != nil {
@@ -193,7 +206,9 @@ func (blockExec *BlockExecutor) ApplyBlock(
 	// Events are fired after everything else.
 	// NOTE: if we crash between Commit and Save, events wont be fired during replay
 	fireEvents(blockExec.logger, blockExec.eventBus, block, abciResponses, validatorUpdates)
-
+	if blockExec.healthMetrics != nil {
+		blockExec.healthMetrics.AddApplyBlocktime(block.Height, tt.End())
+	}
 	return state, retainHeight, nil
 }
 
@@ -275,9 +290,10 @@ func execBlockOnProxyApp(
 	proxyAppConn proxy.AppConnConsensus,
 	block *types.Block,
 	stateDB dbm.DB,
+	healthMetrics *health.HealthMetrics,
 ) (*ABCIResponses, error) {
 	defer types.TimeTrack(time.Now(), logger)
-
+	tt := types.NewTimeTracker()
 	var validTxs, invalidTxs = 0, 0
 
 	txIndex := 0
@@ -316,7 +332,10 @@ func execBlockOnProxyApp(
 		logger.Error("Error in proxyAppConn.BeginBlock", "err", err)
 		return nil, err
 	}
-
+	if healthMetrics != nil {
+		healthMetrics.AddBeginBlockTime(block.Height, tt.End())
+		tt.Start()
+	}
 	// Run txs of block.
 	for _, tx := range block.Txs {
 		proxyAppConn.DeliverTxAsync(abci.RequestDeliverTx{Tx: tx})
@@ -324,7 +343,10 @@ func execBlockOnProxyApp(
 			return nil, err
 		}
 	}
-
+	if healthMetrics != nil {
+		healthMetrics.AddDeliverTxsTime(block.Height, tt.End())
+		tt.Start()
+	}
 	// End block.
 	abciResponses.EndBlock, err = proxyAppConn.EndBlockSync(abci.RequestEndBlock{Height: block.Height})
 	if err != nil {
@@ -333,7 +355,10 @@ func execBlockOnProxyApp(
 	}
 
 	logger.Info("Executed block", "height", block.Height, "validTxs", validTxs, "invalidTxs", invalidTxs)
-
+	if healthMetrics != nil {
+		healthMetrics.AddEndBlockTime(block.Height, tt.End())
+		tt.Start()
+	}
 	return abciResponses, nil
 }
 
@@ -528,7 +553,7 @@ func ExecCommitBlock(
 ) ([]byte, error) {
 	defer types.TimeTrack(time.Now(), logger)
 
-	resp, err := execBlockOnProxyApp(logger, appConnConsensus, block, stateDB)
+	resp, err := execBlockOnProxyApp(logger, appConnConsensus, block, stateDB, nil)
 	if err != nil {
 		logger.Error("Error executing block on proxy app", "height", block.Height, "err", err)
 		return nil, err

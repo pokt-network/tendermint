@@ -299,7 +299,6 @@ func (cs *State) OnStart() error {
 		}
 		cs.wal = wal
 	}
-
 	// we need the timeoutRoutine for replay so
 	// we don't block on the tick chan.
 	// NOTE: we will get a build up of garbage go routines
@@ -585,15 +584,42 @@ func (cs *State) updateToState(state sm.State) {
 	cs.newStep()
 }
 
+var stepTimer *types.TimeTracker
+
 func (cs *State) newStep() {
 	rs := cs.RoundStateEvent()
 	cs.wal.Write(rs)
 	cs.nSteps++
+	hm := cs.blockExec.GetHealthMetrics()
+	hm.SetStep(cs.Height, int64(cs.Round), cs.Step)
 	// newStep is called by updateToState in NewState before the eventBus is set!
 	if cs.eventBus != nil {
 		cs.eventBus.PublishEventNewRoundStep(rs)
 		cs.evsw.FireEvent(types.EventNewRoundStep, &cs.RoundState)
 	}
+	// track times for health metrics
+	healthMetrics := cs.blockExec.GetHealthMetrics()
+	switch cs.Step {
+	case cstypes.RoundStepNewHeight: // no op - just resets the timer
+	case cstypes.RoundStepNewRound: // no op - just resets the timer
+	case cstypes.RoundStepPropose: // no op - just resets the timer
+	case cstypes.RoundStepPrevote:
+		if stepTimer != nil {
+			healthMetrics.SetProposeTime(cs.Height, int64(cs.Round), stepTimer.End())
+		}
+	case cstypes.RoundStepPrevoteWait:
+		if stepTimer != nil {
+			healthMetrics.SetPreVoteTime(cs.Height, int64(cs.Round), stepTimer.End())
+		}
+	case cstypes.RoundStepPrecommit: // no op - just resets the timer
+	case cstypes.RoundStepPrecommitWait:
+		if stepTimer != nil {
+			healthMetrics.SetPreCommitTime(cs.Height, int64(cs.Round), stepTimer.End())
+		}
+	case cstypes.RoundStepCommit: // no op - just resets the timer
+	}
+	tt := types.NewTimeTracker()
+	stepTimer = &tt
 }
 
 //-----------------------------------------
@@ -759,7 +785,6 @@ func (cs *State) handleTimeout(ti timeoutInfo, rs cstypes.RoundState) {
 	// the timeout will now cause a state transition
 	cs.mtx.Lock()
 	defer cs.mtx.Unlock()
-
 	switch ti.Step {
 	case cstypes.RoundStepNewHeight:
 		// NewRound event fired from enterNewRound.
@@ -967,7 +992,10 @@ func (cs *State) isProposer(address []byte) bool {
 			panic(err)
 		}
 	}
-	return bytes.Equal(cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash(), cs.UpgradeHeight, cs.Height, lastCommitBytes, uint64(cs.Round)).Address, address)
+	proposerAddress := cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash(), cs.UpgradeHeight, cs.Height, lastCommitBytes, uint64(cs.Round)).Address
+	healthMetrics := cs.blockExec.GetHealthMetrics()
+	healthMetrics.SetProposer(cs.Height, int64(cs.Round), proposerAddress)
+	return bytes.Equal(proposerAddress, address)
 }
 
 func (cs *State) defaultDecideProposal(height int64, round int) {
@@ -1675,7 +1703,7 @@ func (cs *State) addProposalBlockPart(msg *BlockPartMessage, peerID p2p.ID) (add
 	}
 	if added && cs.ProposalBlockParts.IsComplete() {
 		// Added and completed!
-		_, err = cdc.UnmarshalBinaryLengthPrefixedReader(
+		b, err := cdc.UnmarshalBinaryLengthPrefixedReader(
 			cs.ProposalBlockParts.GetReader(),
 			&cs.ProposalBlock,
 			cs.state.ConsensusParams.Block.MaxBytes,
@@ -1686,7 +1714,6 @@ func (cs *State) addProposalBlockPart(msg *BlockPartMessage, peerID p2p.ID) (add
 		// NOTE: it's possible to receive complete proposal blocks for future rounds without having the proposal
 		cs.Logger.Info("Received complete proposal block", "height", cs.ProposalBlock.Height, "hash", cs.ProposalBlock.Hash())
 		cs.eventBus.PublishEventCompleteProposal(cs.CompleteProposalEvent())
-
 		// Update Valid* if we can.
 		prevotes := cs.Votes.Prevotes(cs.Round)
 		blockID, hasTwoThirds := prevotes.TwoThirdsMajority()
@@ -1715,6 +1742,9 @@ func (cs *State) addProposalBlockPart(msg *BlockPartMessage, peerID p2p.ID) (add
 			// If we're waiting on the proposal block...
 			cs.tryFinalizeCommit(height)
 		}
+		// update the health metrics
+		healthMetrics := cs.blockExec.GetHealthMetrics()
+		healthMetrics.AddBlockSizeMetric(cs.ProposalBlock.Height, b)
 		return added, nil
 	}
 	return added, nil
@@ -1822,6 +1852,8 @@ func (cs *State) addVote(
 		// Either duplicate, or error upon cs.Votes.AddByIndex()
 		return
 	}
+	healthMetrics := cs.blockExec.GetHealthMetrics()
+	healthMetrics.AddVote(*vote)
 
 	cs.eventBus.PublishEventVote(types.EventDataVote{Vote: vote})
 	cs.evsw.FireEvent(types.EventVote, vote)

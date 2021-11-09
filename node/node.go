@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/tendermint/tendermint/health"
 	"net"
 	"net/http"
 	_ "net/http/pprof" // nolint: gosec // securely exposed on separate, optional port
@@ -560,6 +561,7 @@ type BaseApp interface {
 	SetTxIndexer(txIndexer txindex.TxIndexer)
 	SetBlockstore(bs *store.BlockStore)
 	SetTendermintNode(n *Node)
+	GetHealthMetrics() *health.HealthMetrics
 }
 
 // NewNode returns a new, ready to go, Tendermint Node.
@@ -668,7 +670,8 @@ func NewNode(baseApp BaseApp, config *cfg.Config,
 		txIndexer,
 		sm.BlockExecutorWithMetrics(smMetrics),
 	)
-
+	// set health metrics in block executor
+	blockExec.SetHealthMetrics(baseApp.GetHealthMetrics())
 	// Make BlockchainReactor
 	bcReactor, err := createBlockchainReactor(config, state, blockExec, blockStore, fastSync, logger)
 	if err != nil {
