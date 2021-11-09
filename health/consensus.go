@@ -1,9 +1,10 @@
 package health
 
 import (
+	"time"
+
 	"github.com/tendermint/tendermint/consensus/types"
 	tm "github.com/tendermint/tendermint/types"
-	"time"
 )
 
 type Round struct {

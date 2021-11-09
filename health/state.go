@@ -1,8 +1,9 @@
 package health
 
 import (
-	sdk "github.com/pokt-network/pocket-core/types"
 	"time"
+
+	sdk "github.com/pokt-network/pocket-core/types"
 )
 
 type StateMetrics struct {

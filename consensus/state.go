@@ -3,11 +3,12 @@ package consensus
 import (
 	"bytes"
 	"fmt"
-	"github.com/tendermint/tendermint/crypto"
 	"reflect"
 	"runtime/debug"
 	"sync"
 	"time"
+
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/pkg/errors"
 
@@ -37,9 +38,7 @@ var (
 
 //-----------------------------------------------------------------------------
 
-var (
-	msgQueueSize = 1000
-)
+var msgQueueSize = 1000
 
 // msgs from the reactor which may update the state
 type msgInfo struct {
@@ -414,7 +413,6 @@ func (cs *State) AddVote(vote *types.Vote, peerID p2p.ID) (added bool, err error
 
 // SetProposal inputs a proposal.
 func (cs *State) SetProposal(proposal *types.Proposal, peerID p2p.ID) error {
-
 	if peerID == "" {
 		cs.internalMsgQueue <- msgInfo{&ProposalMessage{proposal}, ""}
 	} else {
@@ -427,7 +425,6 @@ func (cs *State) SetProposal(proposal *types.Proposal, peerID p2p.ID) error {
 
 // AddProposalBlockPart inputs a part of the proposal block.
 func (cs *State) AddProposalBlockPart(height int64, round int, part *types.Part, peerID p2p.ID) error {
-
 	if peerID == "" {
 		cs.internalMsgQueue <- msgInfo{&BlockPartMessage{height, round, part}, ""}
 	} else {
@@ -472,7 +469,7 @@ func (cs *State) updateRoundStep(round int, step cstypes.RoundStepType) {
 
 // enterNewRound(height, 0) at cs.StartTime.
 func (cs *State) scheduleRound0(rs *cstypes.RoundState) {
-	//cs.Logger.Info("scheduleRound0", "now", tmtime.Now(), "startTime", cs.StartTime)
+	// cs.Logger.Info("scheduleRound0", "now", tmtime.Now(), "startTime", cs.StartTime)
 	sleepDuration := rs.StartTime.Sub(tmtime.Now())
 	cs.scheduleTimeout(sleepDuration, rs.Height, 0, cstypes.RoundStepNewHeight)
 }
@@ -814,7 +811,6 @@ func (cs *State) handleTimeout(ti timeoutInfo, rs cstypes.RoundState) {
 	default:
 		panic(fmt.Sprintf("Invalid timeout step: %v", ti.Step))
 	}
-
 }
 
 func (cs *State) handleTxsAvailable() {
@@ -898,7 +894,7 @@ func (cs *State) enterNewRound(height int64, round int) {
 	cs.Votes.SetRound(round + 1) // also track next round (round+1) to allow round-skipping
 	cs.TriggeredTimeoutPrecommit = false
 
-	//cs.eventBus.PublishEventNewRound(cs.NewRoundEvent())
+	// cs.eventBus.PublishEventNewRound(cs.NewRoundEvent())
 	cs.metrics.Rounds.Set(float64(round))
 
 	// Wait for txs to be available in the mempool
@@ -981,8 +977,8 @@ func (cs *State) enterPropose(height int64, round int) {
 		return
 	}
 
-	//Change isProposer with the new getProposer to optimize for N validators.
-	//We only look for the proposer once and do multiple []byte comparison.
+	// Change isProposer with the new getProposer to optimize for N validators.
+	// We only look for the proposer once and do multiple []byte comparison.
 	proposerAddress := cs.getProposer().Address
 
 	for _, pubKey := range pubKeys {
@@ -1082,7 +1078,6 @@ func (cs *State) isProposalComplete() bool {
 	}
 	// if this is false the proposer is lying or we haven't received the POL yet
 	return cs.Votes.Prevotes(cs.Proposal.POLRound).HasTwoThirdsMajority()
-
 }
 
 // Create the next block to propose and return it. Returns nil block upon error.
@@ -1341,7 +1336,6 @@ func (cs *State) enterPrecommitWait(height int64, round int) {
 
 	// Wait for some more precommits; enterNewRound
 	cs.scheduleTimeout(cs.config.Precommit(round), height, round, cstypes.RoundStepPrecommitWait)
-
 }
 
 // Enter: +2/3 precommits for block
@@ -1828,7 +1822,8 @@ func (cs *State) tryAddVote(vote *types.Vote, peerID p2p.ID) (bool, error) {
 
 func (cs *State) addVote(
 	vote *types.Vote,
-	peerID p2p.ID) (added bool, err error) {
+	peerID p2p.ID,
+) (added bool, err error) {
 	cs.Logger.Debug(
 		"addVote",
 		"voteHeight",
@@ -2059,7 +2054,7 @@ func (cs *State) signAddVote(msgType types.SignedMsgType, hash []byte, header ty
 			cs.Logger.Info("Signed and pushed vote", "height", cs.Height, "round", cs.Round, "vote", vote, "err", err)
 			votes = append(votes, vote)
 		} else {
-			//if !cs.replayMode {
+			// if !cs.replayMode {
 			cs.Logger.Error("Error signing vote", "height", cs.Height, "round", cs.Round, "vote", vote, "err", err)
 			//}
 		}
