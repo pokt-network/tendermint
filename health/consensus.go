@@ -139,6 +139,22 @@ func (hm *HealthMetrics) AddPreCommit(height, round int64, v Voter) {
 	hm.BlockMetrics[height] = bm
 }
 
+func (hm *HealthMetrics) GetConsensusMetrics(height int64) ConsensusMetrics {
+	hm.mtx.Lock()
+	defer hm.mtx.Unlock()
+	hm.InitHeight(height)
+	return hm.BlockMetrics[height].ConsensusMetrics
+}
+
+func (hm *HealthMetrics) SetConsensusMetrics(height int64, cm ConsensusMetrics) {
+	hm.mtx.Lock()
+	defer hm.mtx.Unlock()
+	hm.InitHeight(height)
+	bm := hm.BlockMetrics[height]
+	bm.ConsensusMetrics = cm
+	hm.BlockMetrics[height] = bm
+}
+
 type Validator struct {
 	Address    tm.Address
 	ServiceURL string

@@ -101,39 +101,3 @@ func (hm *HealthMetrics) Prune(latestHeight int64) {
 		}
 	}
 }
-
-func (hm *HealthMetrics) AddServiceUrls(ctx sdk.Ctx, s ValServiceURL) {
-	hm.mtx.Lock()
-	defer hm.mtx.Unlock()
-	hm.InitHeight(ctx.BlockHeight())
-	bm := hm.BlockMetrics[ctx.BlockHeight()]
-	for i, r := range bm.ConsensusMetrics.Rounds {
-		pv := r.PreVotes
-		pc := r.PreCommits
-		for _, v := range pv.Voters {
-			v.ServiceURL = s[strings.ToLower(hex.EncodeToString(v.Address))].ServiceURL
-			v.Power = s[hex.EncodeToString(v.Address)].Power
-		}
-		for _, v := range pc.Voters {
-			v.ServiceURL = s[strings.ToLower(hex.EncodeToString(v.Address))].ServiceURL
-			v.Power = s[strings.ToLower(hex.EncodeToString(v.Address))].Power
-		}
-		r.PreVotes = pv
-		r.PreCommits = pc
-		bm.ConsensusMetrics.Rounds[i] = r
-	}
-}
-
-type ValServiceURL map[string]Validator
-
-func (vsu *ValServiceURL) NewValServiceURL() ValServiceURL {
-	return make(map[string]Validator)
-}
-
-func (vsu *ValServiceURL) AddValidator(address types.Address, serviceURL string, power int64) {
-	(*vsu)[strings.ToLower(address.String())] = Validator{
-		Address:    address,
-		ServiceURL: serviceURL,
-		Power:      power,
-	}
-}
