@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	sdk "github.com/pokt-network/pocket-core/types"
+	"github.com/pokt-network/tendermint/types"
 	"sort"
 	"sync"
 )
@@ -128,7 +129,7 @@ func (vsu *ValServiceURL) NewValServiceURL() ValServiceURL {
 	return make(map[string]Validator)
 }
 
-func (vsu *ValServiceURL) AddValidator(address sdk.Address, serviceURL string, power int64) {
+func (vsu *ValServiceURL) AddValidator(address types.Address, serviceURL string, power int64) {
 	(*vsu)[address.String()] = Validator{
 		Address:    address,
 		ServiceURL: serviceURL,
