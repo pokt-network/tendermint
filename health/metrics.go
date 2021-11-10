@@ -23,11 +23,11 @@ type HealthMetrics struct {
 type BlockMetrics struct {
 	Height             int64
 	IsCheckTx          bool
-	ConsensusMetrics   *ConsensusMetrics
-	DataSizeMetrics    *DataSizeMetrics
-	LifecycleMetrics   *LifecycleMetrics
-	StateMetrics       *StateMetrics
-	TransactionMetrics *TransactionMetrics
+	ConsensusMetrics   ConsensusMetrics
+	DataSizeMetrics    DataSizeMetrics
+	LifecycleMetrics   LifecycleMetrics
+	StateMetrics       StateMetrics
+	TransactionMetrics TransactionMetrics
 }
 
 func (hm *HealthMetrics) InitHeight(height int64) {
@@ -37,7 +37,7 @@ func (hm *HealthMetrics) InitHeight(height int64) {
 	hm.BlockMetrics[height] = BlockMetrics{
 		Height: height,
 		IsCheckTx: true,
-		StateMetrics: &StateMetrics{
+		StateMetrics: StateMetrics{
 			JailMetrics: JailMetrics{
 				JailedValidators: make([]Validator, 0),
 			},
@@ -45,7 +45,7 @@ func (hm *HealthMetrics) InitHeight(height int64) {
 				SessionGenerationTimes: make([]time.Duration, 0),
 			},
 		},
-		TransactionMetrics: &TransactionMetrics{
+		TransactionMetrics: TransactionMetrics{
 			Transactions: make([]Transaction, 0),
 		},
 	}

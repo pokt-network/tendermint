@@ -25,23 +25,19 @@ type ConsensusTiming struct {
 	PreCommitTime time.Duration
 }
 
-func (cm *ConsensusMetrics) InitRound(roundNumber int64) {
-	if cm.Rounds == nil {
-		cm.Rounds = make(map[int64]Round)
+func (hm *HealthMetrics) InitRound(height int64, roundNumber int64) {
+	bm := hm.BlockMetrics[height]
+	if bm.ConsensusMetrics.Rounds == nil {
+		bm.ConsensusMetrics.Rounds = make(map[int64]Round)
 	}
-	if _, found := cm.Rounds[roundNumber]; found {
+	if _, found := bm.ConsensusMetrics.Rounds[roundNumber]; found {
 		return
 	}
-	cm.Rounds[roundNumber] = Round{
+	bm.ConsensusMetrics.Rounds[roundNumber] = Round{
 		RoundNumber: roundNumber,
 		PreVotes:    VoteMetrics{Voters: make([]Voter, 0)},
 		PreCommits:  VoteMetrics{Voters: make([]Voter, 0)},
 	}
-}
-
-func (hm *HealthMetrics) InitRound(height int64, roundNumber int64) {
-	bm := hm.BlockMetrics[height]
-	bm.ConsensusMetrics.InitRound(roundNumber)
 	hm.BlockMetrics[height] = bm
 }
 
