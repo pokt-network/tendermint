@@ -2,7 +2,6 @@ package store
 
 import (
 	"fmt"
-	"github.com/tendermint/tendermint/health"
 	"strconv"
 	"sync"
 	"time"
@@ -35,10 +34,10 @@ The store can be assumed to contain all contiguous blocks between base and heigh
 type BlockStore struct {
 	db dbm.DB
 
-	mtx    sync.RWMutex
-	base   int64
-	height int64
-	HealthMetrics *health.HealthMetrics
+	mtx               sync.RWMutex
+	base              int64
+	height            int64
+	StoreBlockMetrics func(height int64, size int64)
 }
 
 // NewBlockStore returns a new BlockStore with the given DB,
@@ -300,7 +299,9 @@ func (bs *BlockStore) SaveBlock(block *types.Block, blockParts *types.PartSet, s
 	}
 
 	// health metric block size
-	bs.HealthMetrics.AddBlockSizeMetric(height, int64(blockParts.Total()*types.BlockPartSizeBytes))
+	if bs.StoreBlockMetrics != nil {
+		bs.StoreBlockMetrics(height, int64(blockParts.Total()*types.BlockPartSizeBytes))
+	}
 
 	// Save block commit (duplicate and separate from the Block)
 	blockCommitBytes := cdc.MustMarshalBinaryBare(block.LastCommit)
