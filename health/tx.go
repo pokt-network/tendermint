@@ -1,12 +1,8 @@
 package health
 
-import (
-	"time"
-)
-
 type Transaction struct {
 	TypeOf         string
-	ProcessingTime time.Duration
+	ProcessingTime string
 	IsValid        bool
 }
 
@@ -20,9 +16,9 @@ type TransactionMetrics struct {
 func (hm *HealthMetrics) AddTransaction(blockHeight int64, transaction Transaction) {
 	hm.mtx.Lock()
 	defer hm.mtx.Unlock()
-	hm.InitHeight(blockHeight)
-	bm := hm.BlockMetrics[blockHeight]
-	if !bm.IsCheckTx {
+	hm.InitHeight(blockHeight+1)
+	if !hm.isCheckTx {
+		bm := hm.BlockMetrics[blockHeight+1]
 		bm.TransactionMetrics.TotalTransactions++
 		if transaction.IsValid {
 			bm.TransactionMetrics.TotalValidTxs++
@@ -30,6 +26,6 @@ func (hm *HealthMetrics) AddTransaction(blockHeight int64, transaction Transacti
 			bm.TransactionMetrics.TotalInvalidTxs++
 		}
 		bm.TransactionMetrics.Transactions = append(bm.TransactionMetrics.Transactions, transaction)
-		hm.BlockMetrics[blockHeight] = bm
+		hm.BlockMetrics[blockHeight+1] = bm
 	}
 }

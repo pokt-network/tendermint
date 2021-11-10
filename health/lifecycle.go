@@ -5,10 +5,10 @@ import (
 )
 
 type LifecycleMetrics struct {
-	ApplyBlockTime time.Duration
-	BeginBlock     time.Duration
-	DeliverTxs     time.Duration
-	EndBlock       time.Duration
+	ApplyBlockTime string
+	BeginBlock     string
+	DeliverTxs     string
+	EndBlock       string
 }
 
 func (hm *HealthMetrics) AddApplyBlocktime(height int64, d time.Duration) {
@@ -16,7 +16,7 @@ func (hm *HealthMetrics) AddApplyBlocktime(height int64, d time.Duration) {
 	defer hm.mtx.Unlock()
 	hm.InitHeight(height)
 	bm := hm.BlockMetrics[height]
-	bm.LifecycleMetrics.ApplyBlockTime = d
+	bm.LifecycleMetrics.ApplyBlockTime = d.String()
 	hm.BlockMetrics[height] = bm
 }
 
@@ -25,7 +25,7 @@ func (hm *HealthMetrics) AddBeginBlockTime(height int64, d time.Duration) {
 	defer hm.mtx.Unlock()
 	hm.InitHeight(height)
 	bm := hm.BlockMetrics[height]
-	bm.LifecycleMetrics.BeginBlock = d
+	bm.LifecycleMetrics.BeginBlock = d.String()
 	hm.BlockMetrics[height] = bm
 }
 
@@ -34,7 +34,7 @@ func (hm *HealthMetrics) AddDeliverTxsTime(height int64, d time.Duration) {
 	defer hm.mtx.Unlock()
 	hm.InitHeight(height)
 	bm := hm.BlockMetrics[height]
-	bm.LifecycleMetrics.DeliverTxs = d
+	bm.LifecycleMetrics.DeliverTxs = d.String()
 	hm.BlockMetrics[height] = bm
 }
 
@@ -43,6 +43,6 @@ func (hm *HealthMetrics) AddEndBlockTime(height int64, d time.Duration) {
 	defer hm.mtx.Unlock()
 	hm.InitHeight(height)
 	bm := hm.BlockMetrics[height]
-	bm.LifecycleMetrics.EndBlock = d
+	bm.LifecycleMetrics.EndBlock = d.String()
 	hm.BlockMetrics[height] = bm
 }

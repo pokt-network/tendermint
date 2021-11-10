@@ -581,6 +581,8 @@ func NewNode(baseApp BaseApp, config *cfg.Config,
 	if err != nil {
 		return nil, err
 	}
+	// add health metrics to blockstore
+	blockStore.HealthMetrics = baseApp.GetHealthMetrics()
 
 	state, genDoc, err := LoadStateFromDBOrGenesisDocProvider(stateDB, genesisDocProvider)
 	if err != nil {
