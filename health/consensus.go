@@ -20,9 +20,9 @@ type ConsensusMetrics struct {
 }
 
 type ConsensusTiming struct {
-	ProposeTime   time.Duration
-	PreVoteTime   time.Duration
-	PreCommitTime time.Duration
+	ProposeTime   string
+	PreVoteTime   string
+	PreCommitTime string
 }
 
 func (hm *HealthMetrics) InitRound(height int64, roundNumber int64) {
@@ -60,7 +60,7 @@ func (hm *HealthMetrics) SetProposeTime(height, round int64, d time.Duration) {
 	hm.InitRound(height, round)
 	bm := hm.BlockMetrics[height]
 	r := bm.ConsensusMetrics.Rounds[round]
-	r.ConsensusTiming.ProposeTime = d
+	r.ConsensusTiming.ProposeTime = d.String()
 	bm.ConsensusMetrics.Rounds[round] = r
 	hm.BlockMetrics[height] = bm
 }
@@ -72,7 +72,7 @@ func (hm *HealthMetrics) SetPreVoteTime(height, round int64, d time.Duration) {
 	hm.InitRound(height, round)
 	bm := hm.BlockMetrics[height]
 	r := bm.ConsensusMetrics.Rounds[round]
-	r.ConsensusTiming.PreVoteTime = d
+	r.ConsensusTiming.PreVoteTime = d.String()
 	bm.ConsensusMetrics.Rounds[round] = r
 	hm.BlockMetrics[height] = bm
 }
@@ -84,7 +84,7 @@ func (hm *HealthMetrics) SetPreCommitTime(height, round int64, d time.Duration) 
 	hm.InitRound(height, round)
 	bm := hm.BlockMetrics[height]
 	r := bm.ConsensusMetrics.Rounds[round]
-	r.ConsensusTiming.PreCommitTime = d
+	r.ConsensusTiming.PreCommitTime = d.String()
 	bm.ConsensusMetrics.Rounds[round] = r
 	hm.BlockMetrics[height] = bm
 }
@@ -108,7 +108,7 @@ func (hm *HealthMetrics) AddVote(vote tm.Vote) {
 	hm.InitRound(vote.Height, int64(vote.Round))
 	voteString := ""
 	if !vote.BlockID.IsZero() {
-		voteString = vote.BlockID.String()
+		voteString = vote.String()
 	}
 	voter := Voter{
 		Validator: Validator{

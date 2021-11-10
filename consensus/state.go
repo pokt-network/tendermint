@@ -608,15 +608,15 @@ func (cs *State) newStep() {
 			healthMetrics.SetProposeTime(cs.Height, int64(cs.Round), stepTimer.End())
 		}
 	case cstypes.RoundStepPrevoteWait:
+	case cstypes.RoundStepPrecommit: // no op - just resets the timer
 		if stepTimer != nil {
 			healthMetrics.SetPreVoteTime(cs.Height, int64(cs.Round), stepTimer.End())
 		}
-	case cstypes.RoundStepPrecommit: // no op - just resets the timer
 	case cstypes.RoundStepPrecommitWait:
+	case cstypes.RoundStepCommit: // no op - just resets the timer
 		if stepTimer != nil {
 			healthMetrics.SetPreCommitTime(cs.Height, int64(cs.Round), stepTimer.End())
 		}
-	case cstypes.RoundStepCommit: // no op - just resets the timer
 	}
 	tt := types.NewTimeTracker()
 	stepTimer = &tt
