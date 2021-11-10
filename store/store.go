@@ -292,15 +292,16 @@ func (bs *BlockStore) SaveBlock(block *types.Block, blockParts *types.PartSet, s
 	bs.db.Set(calcBlockMetaKey(height), metaBytes)
 	bs.db.Set(calcBlockHashKey(hash), []byte(fmt.Sprintf("%d", height)))
 
+	blockSize := 0
 	// Save block parts
 	for i := 0; i < blockParts.Total(); i++ {
 		part := blockParts.GetPart(i)
-		bs.saveBlockPart(height, i, part)
+		blockSize += bs.saveBlockPart(height, i, part)
 	}
 
 	// health metric block size
 	if bs.StoreBlockMetrics != nil {
-		bs.StoreBlockMetrics(height, int64(blockParts.Total()*types.BlockPartSizeBytes))
+		bs.StoreBlockMetrics(height, int64(blockSize))
 	}
 
 	// Save block commit (duplicate and separate from the Block)
@@ -327,9 +328,10 @@ func (bs *BlockStore) SaveBlock(block *types.Block, blockParts *types.PartSet, s
 	bs.db.SetSync(nil, nil)
 }
 
-func (bs *BlockStore) saveBlockPart(height int64, index int, part *types.Part) {
+func (bs *BlockStore) saveBlockPart(height int64, index int, part *types.Part) (bytesWritten int){
 	partBytes := cdc.MustMarshalBinaryBare(part)
 	bs.db.Set(calcBlockPartKey(height, index), partBytes)
+	return len(partBytes)
 }
 
 func (bs *BlockStore) saveState() {
