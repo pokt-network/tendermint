@@ -1,4 +1,4 @@
-module github.com/pokt-network/tendermint
+module github.com/tendermint/tendermint
 
 go 1.17
 
@@ -35,12 +35,8 @@ require (
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/tm-db v0.5.1
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-<<<<<<< HEAD
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
->>>>>>> 352291d (update min evidence height)
-=======
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974
->>>>>>> 8d5a3dd (updating gogo/protobuf to v1.3.2)
 	google.golang.org/grpc v1.28.1
 )
 
