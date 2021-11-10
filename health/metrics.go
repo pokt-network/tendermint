@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/types"
 	"sort"
 	"sync"
+	"strings"
 )
 
 func NewHealthMetrics(pruneAfter int64) *HealthMetrics {
@@ -110,12 +111,12 @@ func (hm *HealthMetrics) AddServiceUrls(ctx sdk.Ctx, s ValServiceURL) {
 		pv := r.PreVotes
 		pc := r.PreCommits
 		for _, v := range pv.Voters {
-			v.ServiceURL = s[hex.EncodeToString(v.Address)].ServiceURL
+			v.ServiceURL = s[strings.ToLower(hex.EncodeToString(v.Address))].ServiceURL
 			v.Power = s[hex.EncodeToString(v.Address)].Power
 		}
 		for _, v := range pc.Voters {
-			v.ServiceURL = s[hex.EncodeToString(v.Address)].ServiceURL
-			v.Power = s[hex.EncodeToString(v.Address)].Power
+			v.ServiceURL = s[strings.ToLower(hex.EncodeToString(v.Address))].ServiceURL
+			v.Power = s[strings.ToLower(hex.EncodeToString(v.Address))].Power
 		}
 		r.PreVotes = pv
 		r.PreCommits = pc
@@ -130,7 +131,7 @@ func (vsu *ValServiceURL) NewValServiceURL() ValServiceURL {
 }
 
 func (vsu *ValServiceURL) AddValidator(address types.Address, serviceURL string, power int64) {
-	(*vsu)[address.String()] = Validator{
+	(*vsu)[strings.ToLower(address.String())] = Validator{
 		Address:    address,
 		ServiceURL: serviceURL,
 		Power:      power,
