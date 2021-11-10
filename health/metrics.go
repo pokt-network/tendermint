@@ -1,6 +1,7 @@
 package health
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	sdk "github.com/pokt-network/pocket-core/types"
 	"sort"
@@ -102,23 +103,35 @@ func (hm *HealthMetrics) Prune(latestHeight int64) {
 func (hm *HealthMetrics) AddServiceUrls(ctx sdk.Ctx, s ValServiceURL) {
 	hm.mtx.Lock()
 	defer hm.mtx.Unlock()
-	hm.InitHeight(ctx.BlockHeight() + 2)
-	for _, r := range hm.BlockMetrics[ctx.BlockHeight()+2].ConsensusMetrics.Rounds {
-		for _, v := range r.PreVotes.Voters {
-			v.ServiceURL = s[v.Address.String()]
+	hm.InitHeight(ctx.BlockHeight())
+	bm := hm.BlockMetrics[ctx.BlockHeight()]
+	for i, r := range bm.ConsensusMetrics.Rounds {
+		pv := r.PreVotes
+		pc := r.PreCommits
+		for _, v := range pv.Voters {
+			v.ServiceURL = s[hex.EncodeToString(v.Address)].ServiceURL
+			v.Power = s[hex.EncodeToString(v.Address)].Power
 		}
-		for _, v := range r.PreCommits.Voters {
-			v.ServiceURL = s[v.Address.String()]
+		for _, v := range pc.Voters {
+			v.ServiceURL = s[hex.EncodeToString(v.Address)].ServiceURL
+			v.Power = s[hex.EncodeToString(v.Address)].Power
 		}
+		r.PreVotes = pv
+		r.PreCommits = pc
+		bm.ConsensusMetrics.Rounds[i] = r
 	}
 }
 
-type ValServiceURL map[string]string
+type ValServiceURL map[string]Validator
 
 func (vsu *ValServiceURL) NewValServiceURL() ValServiceURL {
-	return make(map[string]string)
+	return make(map[string]Validator)
 }
 
-func (vsu *ValServiceURL) AddValidator(address sdk.Address, serviceURL string) {
-	(*vsu)[address.String()] = serviceURL
+func (vsu *ValServiceURL) AddValidator(address sdk.Address, serviceURL string, power int64) {
+	(*vsu)[address.String()] = Validator{
+		Address:    address,
+		ServiceURL: serviceURL,
+		Power:      power,
+	}
 }
