@@ -1,13 +1,9 @@
 package health
 
 import (
-	"encoding/hex"
 	"encoding/json"
-	sdk "github.com/pokt-network/pocket-core/types"
-	"github.com/tendermint/tendermint/types"
 	"sort"
 	"sync"
-	"strings"
 )
 
 func NewHealthMetrics(pruneAfter int64) *HealthMetrics {
