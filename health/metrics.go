@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"sort"
 	"sync"
+	"time"
 )
 
 func NewHealthMetrics(pruneAfter int64) *HealthMetrics {
@@ -22,6 +23,7 @@ type HealthMetrics struct {
 }
 
 type BlockMetrics struct {
+	Timestamp          time.Time
 	Height             int64
 	ConsensusMetrics   ConsensusMetrics
 	DataSizeMetrics    DataSizeMetrics
@@ -35,7 +37,7 @@ type BlockMetricsJSON []BlockMetrics
 func (hm *HealthMetrics) MarshalJSON() ([]byte, error) {
 	bmArray := make(BlockMetricsJSON, 0)
 	for _, bm := range hm.BlockMetrics {
-		if bm.ConsensusMetrics.Rounds == nil && bm.LifecycleMetrics.BeginBlock == "" {
+		if bm.ConsensusMetrics.Rounds == nil && bm.LifecycleMetrics.BeginBlock == 0 {
 			continue
 		}
 		bmArray = append(bmArray, bm)
@@ -64,13 +66,14 @@ func (hm *HealthMetrics) InitHeight(height int64) {
 		return
 	}
 	hm.BlockMetrics[height] = BlockMetrics{
-		Height: height,
+		Timestamp: time.Now().UTC(),
+		Height:    height,
 		StateMetrics: StateMetrics{
 			JailMetrics: JailMetrics{
 				JailedValidators: make([]Validator, 0),
 			},
 			SessionMetrics: SessionMetrics{
-				SessionGenerationTimes: make([]string, 0),
+				SessionGenerationTimes: make([]int64, 0),
 			},
 		},
 		TransactionMetrics: TransactionMetrics{

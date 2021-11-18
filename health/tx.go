@@ -2,7 +2,8 @@ package health
 
 type Transaction struct {
 	TypeOf         string
-	ProcessingTime string
+	ProcessingTime int64
+	Sender         string
 	IsValid        bool
 }
 
@@ -16,7 +17,7 @@ type TransactionMetrics struct {
 func (hm *HealthMetrics) AddTransaction(blockHeight int64, transaction Transaction) {
 	hm.mtx.Lock()
 	defer hm.mtx.Unlock()
-	hm.InitHeight(blockHeight+1)
+	hm.InitHeight(blockHeight + 1)
 	if !hm.isCheckTx {
 		bm := hm.BlockMetrics[blockHeight+1]
 		bm.TransactionMetrics.TotalTransactions++

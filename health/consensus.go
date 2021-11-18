@@ -20,9 +20,9 @@ type ConsensusMetrics struct {
 }
 
 type ConsensusTiming struct {
-	ProposeTime   string
-	PreVoteTime   string
-	PreCommitTime string
+	ProposeTime   int64
+	PreVoteTime   int64
+	PreCommitTime int64
 }
 
 func (hm *HealthMetrics) InitRound(height int64, roundNumber int64) {
@@ -60,7 +60,7 @@ func (hm *HealthMetrics) SetProposeTime(height, round int64, d time.Duration) {
 	hm.InitRound(height, round)
 	bm := hm.BlockMetrics[height]
 	r := bm.ConsensusMetrics.Rounds[round]
-	r.ConsensusTiming.ProposeTime = d.String()
+	r.ConsensusTiming.ProposeTime = d.Milliseconds()
 	bm.ConsensusMetrics.Rounds[round] = r
 	hm.BlockMetrics[height] = bm
 }
@@ -72,7 +72,7 @@ func (hm *HealthMetrics) SetPreVoteTime(height, round int64, d time.Duration) {
 	hm.InitRound(height, round)
 	bm := hm.BlockMetrics[height]
 	r := bm.ConsensusMetrics.Rounds[round]
-	r.ConsensusTiming.PreVoteTime = d.String()
+	r.ConsensusTiming.PreVoteTime = d.Milliseconds()
 	bm.ConsensusMetrics.Rounds[round] = r
 	hm.BlockMetrics[height] = bm
 }
@@ -84,7 +84,7 @@ func (hm *HealthMetrics) SetPreCommitTime(height, round int64, d time.Duration) 
 	hm.InitRound(height, round)
 	bm := hm.BlockMetrics[height]
 	r := bm.ConsensusMetrics.Rounds[round]
-	r.ConsensusTiming.PreCommitTime = d.String()
+	r.ConsensusTiming.PreCommitTime = d.Milliseconds()
 	bm.ConsensusMetrics.Rounds[round] = r
 	hm.BlockMetrics[height] = bm
 }

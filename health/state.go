@@ -13,7 +13,7 @@ type StateMetrics struct {
 
 type SessionMetrics struct {
 	SessionsGenerated      int64
-	SessionGenerationTimes []string
+	SessionGenerationTimes []int64
 	TotalRelays            int64
 }
 
@@ -69,7 +69,7 @@ func (hm *HealthMetrics) AddSessionDuration(ctx sdk.Ctx, d time.Duration) {
 		sm := bm.StateMetrics
 		sessionMetrics := sm.SessionMetrics
 		sessionMetrics.SessionsGenerated += 1
-		sessionMetrics.SessionGenerationTimes = append(sessionMetrics.SessionGenerationTimes, d.String())
+		sessionMetrics.SessionGenerationTimes = append(sessionMetrics.SessionGenerationTimes, d.Milliseconds())
 		sm.SessionMetrics = sessionMetrics
 		bm.StateMetrics = sm
 		hm.BlockMetrics[ctx.BlockHeight()] = bm

@@ -14,11 +14,11 @@ func (hm *HealthMetrics) AddBlockSizeMetric(height int64, blockSizeInBytes int64
 	hm.BlockMetrics[height] = bm
 }
 
-func (hm *HealthMetrics) AddStateSizeMetric(height int64, stateSizeInBlytes int64) {
+func (hm *HealthMetrics) AddStateSizeMetric(height int64, stateSizeInBytes int64) {
 	hm.mtx.Lock()
 	defer hm.mtx.Unlock()
 	hm.InitHeight(height+1)
 	bm := hm.BlockMetrics[height+1]
-	bm.DataSizeMetrics.StateSize = stateSizeInBlytes
+	bm.DataSizeMetrics.StateSize = stateSizeInBytes
 	hm.BlockMetrics[height+1] = bm
 }
