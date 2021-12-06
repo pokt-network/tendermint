@@ -22,7 +22,7 @@ type TxIndexer interface {
 	Get(hash []byte) (*types.TxResult, error)
 
 	// Search allows you to query for transactions.
-	Search(ctx context.Context, q *query.Query) ([]*types.TxResult, error)
+	Search(ctx context.Context, q *query.Query) ([]*types.TxResult, int, error)
 
 	// DeleteFromHeight method added for rollback
 	DeleteFromHeight(ctx context.Context, height int64) error

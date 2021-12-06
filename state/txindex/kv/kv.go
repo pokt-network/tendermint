@@ -183,7 +183,7 @@ func (txi *TxIndex) DeleteFromHeight(ctx context.Context, height int64) error {
 	if err != nil {
 		return err
 	}
-	res, err := txi.Search(ctx, q)
+	res, _, err := txi.Search(ctx, q)
 	if err != nil {
 		return err
 	}
@@ -209,29 +209,29 @@ func (txi *TxIndex) DeleteFromHeight(ctx context.Context, height int64) error {
 // result for it (2) for range queries it is better for the client to provide
 // both lower and upper bounds, so we are not performing a full scan. Results
 // from querying indexes are then intersected and returned to the caller.
-func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResult, error) {
+func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResult, int, error) {
 	var hashesInitialized bool
 	filteredHashes := make(map[string]*keyAndHash)
 
 	// get a list of conditions (like "tx.height > 5")
 	conditions, err := q.Conditions()
 	if err != nil {
-		return nil, errors.Wrap(err, "error during parsing conditions from query")
+		return nil, 0, errors.Wrap(err, "error during parsing conditions from query")
 	}
 
 	// if there is a hash condition, return the result immediately
 	hash, ok, err := lookForHash(conditions...)
 	if err != nil {
-		return nil, errors.Wrap(err, "error during searching for a hash in the query")
+		return nil, 0, errors.Wrap(err, "error during searching for a hash in the query")
 	} else if ok {
 		res, err := txi.Get(hash)
 		switch {
 		case err != nil:
-			return []*types.TxResult{}, errors.Wrap(err, "error while retrieving the result")
+			return []*types.TxResult{}, 0, errors.Wrap(err, "error while retrieving the result")
 		case res == nil:
-			return []*types.TxResult{}, nil
+			return []*types.TxResult{}, 0, nil
 		default:
-			return []*types.TxResult{res}, nil
+			return []*types.TxResult{res}, 0, nil
 		}
 	}
 
@@ -333,12 +333,12 @@ func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResu
 				}
 				res, err := txi.Get(hat.hash)
 				if err != nil {
-					return nil, errors.Wrapf(err, "failed to get Tx{%X}", hat.hash)
+					return nil, 0, errors.Wrapf(err, "failed to get Tx{%X}", hat.hash)
 				}
 				results = append(results, res)
 				// Potentially exit early.
 				if len(results) == cap(results) {
-					return results, nil
+					return results, 0, nil
 				}
 			}
 		}
@@ -351,12 +351,12 @@ func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResu
 		default:
 			res, err := txi.Get(hashAndKeyPair.hash)
 			if err != nil {
-				return nil, errors.Wrapf(err, "failed to get Tx{%X}", hashAndKeyPair.hash)
+				return nil, 0, errors.Wrapf(err, "failed to get Tx{%X}", hashAndKeyPair.hash)
 			}
 			results = append(results, res)
 		}
 	}
-	return results, nil
+	return results, 0, nil
 }
 
 func lookForHash(conditions ...query.Condition) (hash []byte, ok bool, err error) {
