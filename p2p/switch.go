@@ -381,7 +381,7 @@ func (sw *Switch) reconnectToPeer(addr *NetAddress) {
 	defer sw.reconnecting.Delete(string(addr.ID))
 
 	start := time.Now()
-	sw.Logger.Info("Reconnecting to peer", "addr", addr)
+	sw.Logger.Debug("Reconnecting to peer", "addr", addr)
 	for i := 0; i < reconnectAttempts; i++ {
 		if !sw.IsRunning() {
 			return
@@ -394,7 +394,7 @@ func (sw *Switch) reconnectToPeer(addr *NetAddress) {
 			return
 		}
 
-		sw.Logger.Info("Error reconnecting to peer. Trying again", "tries", i, "err", err, "addr", addr)
+		sw.Logger.Debug("Error reconnecting to peer. Trying again", "tries", i, "err", err, "addr", addr)
 		// sleep a set amount
 		sw.randomSleep(reconnectInterval)
 		continue
@@ -417,7 +417,7 @@ func (sw *Switch) reconnectToPeer(addr *NetAddress) {
 		} else if _, ok := err.(ErrCurrentlyDialingOrExistingAddress); ok {
 			return
 		}
-		sw.Logger.Info("Error reconnecting to peer. Trying again", "tries", i, "err", err, "addr", addr)
+		sw.Logger.Debug("Error reconnecting to peer. Trying again", "tries", i, "err", err, "addr", addr)
 	}
 	sw.Logger.Error("Failed to reconnect to peer. Giving up", "addr", addr, "elapsed", time.Since(start))
 }
@@ -613,7 +613,7 @@ func (sw *Switch) acceptRoutine() {
 					sw.addrBook.AddOurAddress(&addr)
 				}
 
-				sw.Logger.Info(
+				sw.Logger.Debug(
 					"Inbound Peer rejected",
 					"err", err,
 					"numPeers", sw.peers.Size(),
@@ -653,7 +653,7 @@ func (sw *Switch) acceptRoutine() {
 			// Ignore connection if we already have enough peers.
 			_, in, _ := sw.NumPeers()
 			if in >= sw.config.MaxNumInboundPeers {
-				sw.Logger.Info(
+				sw.Logger.Debug(
 					"Ignoring inbound connection: already have enough inbound peers",
 					"address", p.SocketAddr(),
 					"have", in,
@@ -672,7 +672,7 @@ func (sw *Switch) acceptRoutine() {
 			if p.IsRunning() {
 				_ = p.Stop()
 			}
-			sw.Logger.Info(
+			sw.Logger.Debug(
 				"Ignoring inbound connection: error while adding peer",
 				"err", err,
 				"id", p.ID(),
@@ -690,7 +690,7 @@ func (sw *Switch) addOutboundPeerWithConfig(
 	addr *NetAddress,
 	cfg *config.P2PConfig,
 ) error {
-	sw.Logger.Info("Dialing peer", "address", addr)
+	sw.Logger.Debug("Dialing peer", "address", addr)
 
 	// XXX(xla): Remove the leakage of test concerns in implementation.
 	if cfg.TestDialFail {
@@ -810,7 +810,7 @@ func (sw *Switch) addPeer(p Peer) error {
 		reactor.AddPeer(p)
 	}
 
-	sw.Logger.Info("Added peer", "peer", p)
+	sw.Logger.Debug("Added peer", "peer", p)
 
 	return nil
 }

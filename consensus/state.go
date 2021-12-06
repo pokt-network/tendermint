@@ -1644,7 +1644,7 @@ func (cs *State) defaultSetProposal(proposal *types.Proposal) error {
 	if cs.ProposalBlockParts == nil {
 		cs.ProposalBlockParts = types.NewPartSetFromHeader(proposal.BlockID.PartsHeader)
 	}
-	cs.Logger.Info("Received proposal", "proposal", proposal)
+	cs.Logger.Info("Received proposal")
 	return nil
 }
 
@@ -1757,7 +1757,7 @@ func (cs *State) tryAddVote(vote *types.Vote, peerID p2p.ID) (bool, error) {
 			// 2) not a bad peer? this can also err sometimes with "Unexpected step" OR
 			// 3) tmkms use with multiple validators connecting to a single tmkms instance
 			// 		(https://github.com/tendermint/tendermint/issues/3839).
-			cs.Logger.Info("Error attempting to add vote", "err", err)
+			cs.Logger.Error("Error attempting to add vote", "err", err)
 			return added, ErrAddingVote
 		}
 	}
@@ -1794,7 +1794,7 @@ func (cs *State) addVote(
 			return added, err
 		}
 
-		cs.Logger.Info(fmt.Sprintf("Added to lastPrecommits: %v", cs.LastCommit.StringShort()))
+		cs.Logger.Debug(fmt.Sprintf("Added to lastPrecommits: %v", cs.LastCommit.StringShort()))
 		cs.eventBus.PublishEventVote(types.EventDataVote{Vote: vote})
 		cs.evsw.FireEvent(types.EventVote, vote)
 
@@ -1829,7 +1829,7 @@ func (cs *State) addVote(
 	switch vote.Type {
 	case types.PrevoteType:
 		prevotes := cs.Votes.Prevotes(vote.Round)
-		cs.Logger.Info("Added to prevote", "vote", vote, "prevotes", prevotes.StringShort())
+		cs.Logger.Info("Added to prevote", "vote from", vote.ValidatorAddress)
 
 		// If +2/3 prevotes for a block or nil for *any* round:
 		if blockID, ok := prevotes.TwoThirdsMajority(); ok {
@@ -1898,7 +1898,7 @@ func (cs *State) addVote(
 
 	case types.PrecommitType:
 		precommits := cs.Votes.Precommits(vote.Round)
-		cs.Logger.Info("Added to precommit", "vote", vote, "precommits", precommits.StringShort())
+		cs.Logger.Info("Added to precommit", "vote from:", vote.ValidatorAddress)
 
 		blockID, ok := precommits.TwoThirdsMajority()
 		if ok {
