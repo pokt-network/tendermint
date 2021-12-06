@@ -103,6 +103,11 @@ func (store *Store) PendingEvidence(maxNum int64) (evidence []types.Evidence) {
 	return store.listEvidence(baseKeyPending, maxNum)
 }
 
+func (store *Store) HasPendingEvidence(ev types.Evidence) (bool, error) {
+	key := keyPending(ev)
+	return store.db.Has(key)
+}
+
 // listEvidence lists up to maxNum pieces of evidence for the given prefix key.
 // It is wrapped by PriorityEvidence and PendingEvidence for convenience.
 // If maxNum is -1, there's no cap on the size of returned evidence.

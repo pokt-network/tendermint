@@ -2,6 +2,7 @@ package evidence
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -62,7 +63,18 @@ func (evpool *Pool) PriorityEvidence() []types.Evidence {
 // PendingEvidence returns up to maxNum uncommitted evidence.
 // If maxNum is -1, all evidence is returned.
 func (evpool *Pool) PendingEvidence(maxNum int64) []types.Evidence {
-	return evpool.store.PendingEvidence(maxNum)
+	evList := evpool.store.PendingEvidence(maxNum)
+	// sanity check for already committed evidence
+	checkedList := make([]types.Evidence, 0)
+	for _, ev := range evList {
+		if evpool.IsCommitted(ev) {
+			// remove the evidence so this doesn't happen again
+			evpool.MarkEvidenceAsCommitted(math.MaxInt64, time.Time{}, []types.Evidence{ev})
+			continue
+		}
+		checkedList = append(checkedList, ev)
+	}
+	return checkedList
 }
 
 // State returns the current state of the evpool.
@@ -94,6 +106,12 @@ func (evpool *Pool) Update(block *types.Block, state sm.State) {
 	evpool.MarkEvidenceAsCommitted(block.Height, block.Time, block.Evidence.Evidence)
 }
 
+// IsPending checks whether the evidence is already pending. DB errors are passed to the logger.
+func (evpool *Pool) IsPending(evidence types.Evidence) bool {
+	ok, _ := evpool.store.HasPendingEvidence(evidence)
+	return ok
+}
+
 // AddEvidence checks the evidence is valid and adds it to the pool.
 func (evpool *Pool) AddEvidence(evidence types.Evidence) error {
 
@@ -101,6 +119,18 @@ func (evpool *Pool) AddEvidence(evidence types.Evidence) error {
 	//if evpool.store.Has(evidence) {
 	//	return ErrEvidenceAlreadyStored{}
 	//}
+
+	// We have already verified this piece of evidence - no need to do it again
+	if evpool.IsPending(evidence) {
+		evpool.logger.Info("Evidence already pending, ignoring this one", "ev", evidence)
+		return nil
+	}
+
+	// check that the evidence isn't already committed
+	if evpool.IsCommitted(evidence) {
+		evpool.logger.Debug("Evidence was already committed, ignoring this one", "ev", evidence)
+		return nil
+	}
 
 	if err := sm.VerifyEvidence(evpool.stateDB, evpool.State(), evidence); err != nil {
 		return ErrInvalidEvidence{err}
