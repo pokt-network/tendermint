@@ -18,7 +18,7 @@ const (
 
 	maxMsgSize = 1048576 // 1MB TODO make it configurable
 
-	broadcastEvidenceIntervalS = 60  // broadcast uncommitted evidence this often
+	broadcastEvidenceIntervalS = 10  // broadcast uncommitted evidence this often
 	peerCatchupSleepIntervalMS = 100 // If peer is behind, sleep this amount
 )
 
