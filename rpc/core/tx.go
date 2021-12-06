@@ -66,13 +66,12 @@ func TxSearch(ctx *rpctypes.Context, query string, prove bool, page, perPage int
 	}
 	q.AddPage(perPage, validateSkipCount(page, perPage), orderBy)
 
-	results, err := env.TxIndexer.Search(ctx.Context(), q)
+	results, total, err := env.TxIndexer.Search(ctx.Context(), q)
 	if err != nil {
 		return nil, err
 	}
 
-	totalCount := len(results)
-	apiResults := make([]*ctypes.ResultTx, 0, totalCount)
+	apiResults := make([]*ctypes.ResultTx, 0)
 	for _, r := range results {
 		var proof types.TxProof
 		if prove {
@@ -90,5 +89,6 @@ func TxSearch(ctx *rpctypes.Context, query string, prove bool, page, perPage int
 		})
 	}
 
-	return &ctypes.ResultTxSearch{Txs: apiResults, TotalCount: totalCount}, nil
+	return &ctypes.ResultTxSearch{Txs: apiResults, TotalCount: total}, nil
 }
+

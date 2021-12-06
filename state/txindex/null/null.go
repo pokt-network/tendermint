@@ -29,8 +29,8 @@ func (txi *TxIndex) Index(result *types.TxResult) error {
 	return nil
 }
 
-func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResult, error) {
-	return []*types.TxResult{}, nil
+func (txi *TxIndex) Search(ctx context.Context, q *query.Query) ([]*types.TxResult, int, error) {
+	return []*types.TxResult{}, 0, nil
 }
 
 func (txi *TxIndex) DeleteFromHeight(ctx context.Context, height int64) error {
