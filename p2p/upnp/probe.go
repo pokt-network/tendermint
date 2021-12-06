@@ -48,14 +48,14 @@ func testHairpin(listener net.Listener, extAddr string, logger log.Logger) (supp
 			logger.Info(fmt.Sprintf("Listener.Accept() error: %v", err))
 			return
 		}
-		logger.Info(fmt.Sprintf("Accepted incoming connection: %v -> %v", inConn.LocalAddr(), inConn.RemoteAddr()))
+		logger.Debug(fmt.Sprintf("Accepted incoming connection: %v -> %v", inConn.LocalAddr(), inConn.RemoteAddr()))
 		buf := make([]byte, 1024)
 		n, err := inConn.Read(buf)
 		if err != nil {
-			logger.Info(fmt.Sprintf("Incoming connection read error: %v", err))
+			logger.Debug(fmt.Sprintf("Incoming connection read error: %v", err))
 			return
 		}
-		logger.Info(fmt.Sprintf("Incoming connection read %v bytes: %X", n, buf))
+		logger.Debug(fmt.Sprintf("Incoming connection read %v bytes: %X", n, buf))
 		if string(buf) == "test data" {
 			supportsHairpin = true
 			return
@@ -65,16 +65,16 @@ func testHairpin(listener net.Listener, extAddr string, logger log.Logger) (supp
 	// Establish outgoing
 	outConn, err := net.Dial("tcp", extAddr)
 	if err != nil {
-		logger.Info(fmt.Sprintf("Outgoing connection dial error: %v", err))
+		logger.Debug(fmt.Sprintf("Outgoing connection dial error: %v", err))
 		return
 	}
 
 	n, err := outConn.Write([]byte("test data"))
 	if err != nil {
-		logger.Info(fmt.Sprintf("Outgoing connection write error: %v", err))
+		logger.Debug(fmt.Sprintf("Outgoing connection write error: %v", err))
 		return
 	}
-	logger.Info(fmt.Sprintf("Outgoing connection wrote %v bytes", n))
+	logger.Debug(fmt.Sprintf("Outgoing connection wrote %v bytes", n))
 
 	// Wait for data receipt
 	time.Sleep(1 * time.Second)

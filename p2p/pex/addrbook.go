@@ -181,7 +181,7 @@ func (a *addrBook) AddOurAddress(addr *p2p.NetAddress) {
 	a.mtx.Lock()
 	defer a.mtx.Unlock()
 
-	a.Logger.Info("Add our address to book", "addr", addr)
+	a.Logger.Debug("Add our address to book", "addr", addr)
 	a.ourAddrs[addr.String()] = struct{}{}
 }
 
@@ -374,7 +374,7 @@ func (a *addrBook) ReinstateBadPeers() {
 		a.addToNewBucket(ka, bucket)
 		delete(a.badPeers, ka.ID())
 
-		a.Logger.Info("Reinstated address", "addr", ka.Addr)
+		a.Logger.Debug("Reinstated address", "addr", ka.Addr)
 	}
 }
 
@@ -533,7 +533,7 @@ func (a *addrBook) addToNewBucket(ka *knownAddress, bucketIdx int) {
 
 	// Enforce max addresses.
 	if len(bucket) > newBucketSize {
-		a.Logger.Info("new bucket is full, expiring new")
+		a.Logger.Debug("new bucket is full, expiring new")
 		a.expireNew(bucketIdx)
 	}
 
@@ -732,7 +732,7 @@ func (a *addrBook) expireNew(bucketIdx int) {
 	for addrStr, ka := range a.bucketsNew[bucketIdx] {
 		// If an entry is bad, throw it away
 		if ka.isBad() {
-			a.Logger.Info(fmt.Sprintf("expiring bad address %v", addrStr))
+			a.Logger.Debug(fmt.Sprintf("expiring bad address %v", addrStr))
 			a.removeFromBucket(ka, bucketTypeNew, bucketIdx)
 			return
 		}
@@ -792,7 +792,7 @@ func (a *addrBook) removeAddress(addr *p2p.NetAddress) {
 	if ka == nil {
 		return
 	}
-	a.Logger.Info("Remove address from book", "addr", addr)
+	a.Logger.Debug("Remove address from book", "addr", addr)
 	a.removeFromAllBuckets(ka)
 }
 
@@ -808,7 +808,7 @@ func (a *addrBook) addBadPeer(addr *p2p.NetAddress, banTime time.Duration) bool 
 		// add to bad peer list
 		ka.ban(banTime)
 		a.badPeers[addr.ID] = ka
-		a.Logger.Info("Add address to blacklist", "addr", addr)
+		a.Logger.Error("Add address to blacklist", "addr", addr)
 	}
 	return true
 }

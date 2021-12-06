@@ -43,7 +43,7 @@ func UnsafeDialSeeds(ctx *rpctypes.Context, seeds []string) (*ctypes.ResultDialS
 	if len(seeds) == 0 {
 		return &ctypes.ResultDialSeeds{}, errors.New("no seeds provided")
 	}
-	env.Logger.Info("DialSeeds", "seeds", seeds)
+	env.Logger.Debug("DialSeeds", "seeds", seeds)
 	if err := env.P2PPeers.DialPeersAsync(seeds); err != nil {
 		return &ctypes.ResultDialSeeds{}, err
 	}
@@ -56,7 +56,7 @@ func UnsafeDialPeers(ctx *rpctypes.Context, peers []string, persistent bool) (*c
 	if len(peers) == 0 {
 		return &ctypes.ResultDialPeers{}, errors.New("no peers provided")
 	}
-	env.Logger.Info("DialPeers", "peers", peers, "persistent", persistent)
+	env.Logger.Debug("DialPeers", "peers", peers, "persistent", persistent)
 	if persistent {
 		if err := env.P2PPeers.AddPersistentPeers(peers); err != nil {
 			return &ctypes.ResultDialPeers{}, err

@@ -378,7 +378,7 @@ func (r *Reactor) ReceiveAddrs(addrs []*p2p.NetAddress, src Peer) error {
 		// If this address came from a seed node, try to connect to it without
 		// waiting (#2093)
 		if srcIsSeed {
-			r.Logger.Info("Will dial address, which came from seed", "addr", netAddr, "seed", srcAddr)
+			r.Logger.Debug("Will dial address, which came from seed", "addr", netAddr, "seed", srcAddr)
 			go func(addr *p2p.NetAddress) {
 				err := r.dialPeer(addr)
 				if err != nil {
@@ -482,7 +482,7 @@ func (r *Reactor) ensurePeers() {
 		// TODO: consider moving some checks from toDial into here
 		// so we don't even consider dialing peers that we want to wait
 		// before dialling again, or have dialed too many times already
-		r.Logger.Info("Will dial address", "addr", try)
+		r.Logger.Debug("Will dial address", "addr", try)
 		toDial[try.ID] = try
 	}
 
@@ -513,7 +513,7 @@ func (r *Reactor) ensurePeers() {
 		peersCount := len(peers)
 		if peersCount > 0 {
 			peer := peers[tmrand.Int()%peersCount]
-			r.Logger.Info("We need more addresses. Sending pexRequest to random peer", "peer", peer)
+			r.Logger.Debug("We need more addresses. Sending pexRequest to random peer", "peer", peer)
 			r.RequestAddrs(peer)
 		}
 

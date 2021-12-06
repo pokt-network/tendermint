@@ -285,7 +285,7 @@ func (conR *Reactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) {
 
 	case DataChannel:
 		if conR.FastSync() {
-			conR.Logger.Info("Ignoring message received during fastSync", "msg", msg)
+			conR.Logger.Debug("Ignoring message received during fastSync", "msg", msg)
 			return
 		}
 		switch msg := msg.(type) {
@@ -304,7 +304,7 @@ func (conR *Reactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) {
 
 	case VoteChannel:
 		if conR.FastSync() {
-			conR.Logger.Info("Ignoring message received during fastSync", "msg", msg)
+			conR.Logger.Debug("Ignoring message received during fastSync", "msg", msg)
 			return
 		}
 		switch msg := msg.(type) {
@@ -326,7 +326,7 @@ func (conR *Reactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) {
 
 	case VoteSetBitsChannel:
 		if conR.FastSync() {
-			conR.Logger.Info("Ignoring message received during fastSync", "msg", msg)
+			conR.Logger.Debug("Ignoring message received during fastSync", "msg", msg)
 			return
 		}
 		switch msg := msg.(type) {
@@ -471,7 +471,7 @@ OUTER_LOOP:
 	for {
 		// Manage disconnects from self or peer.
 		if !peer.IsRunning() || !conR.IsRunning() {
-			logger.Info("Stopping gossipDataRoutine for peer")
+			logger.Debug("Stopping gossipDataRoutine for peer")
 			return
 		}
 		rs := conR.conS.GetRoundState()
@@ -613,7 +613,7 @@ OUTER_LOOP:
 	for {
 		// Manage disconnects from self or peer.
 		if !peer.IsRunning() || !conR.IsRunning() {
-			logger.Info("Stopping gossipVotesRoutine for peer")
+			logger.Debug("Stopping gossipVotesRoutine for peer")
 			return
 		}
 		rs := conR.conS.GetRoundState()
@@ -742,7 +742,7 @@ OUTER_LOOP:
 	for {
 		// Manage disconnects from self or peer.
 		if !peer.IsRunning() || !conR.IsRunning() {
-			logger.Info("Stopping queryMaj23Routine for peer")
+			logger.Debug("Stopping queryMaj23Routine for peer")
 			return
 		}
 
@@ -826,7 +826,7 @@ OUTER_LOOP:
 func (conR *Reactor) peerStatsRoutine() {
 	for {
 		if !conR.IsRunning() {
-			conR.Logger.Info("Stopping peerStatsRoutine")
+			conR.Logger.Debug("Stopping peerStatsRoutine")
 			return
 		}
 

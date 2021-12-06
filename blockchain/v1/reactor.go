@@ -323,7 +323,7 @@ ForLoop:
 		case <-bcR.Quit():
 			break ForLoop
 		case <-stopProcessing:
-			bcR.Logger.Info("finishing block execution")
+			bcR.Logger.Info("Finishing block execution")
 			break ForLoop
 		case <-processReceivedBlockTicker.C: // try to execute blocks
 			select {
@@ -524,7 +524,7 @@ func (bcR *BlockchainReactor) switchToConsensus() {
 //    - adding a block (addBlock) fails
 //    - reactor processing of a block reports failure and FSM sends back the peers of first and second blocks
 func (bcR *BlockchainReactor) sendPeerError(err error, peerID p2p.ID) {
-	bcR.Logger.Info("sendPeerError:", "peer", peerID, "error", err)
+	bcR.Logger.Debug("sendPeerError:", "peer", peerID, "error", err)
 	msgData := bcFsmMessage{
 		event: peerErrorEv,
 		data: bFsmEventData{
