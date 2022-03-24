@@ -1,6 +1,6 @@
 module github.com/pokt-network/tendermint
 
-go 1.13
+go 1.16
 
 require (
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d
@@ -11,9 +11,9 @@ require (
 	github.com/go-kit/kit v0.10.0
 	github.com/go-logfmt/logfmt v0.5.0
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/protobuf v1.4.0
+	github.com/golang/protobuf v1.4.2
 	github.com/gorilla/websocket v1.4.2
-	github.com/gtank/merlin v0.1.1
+	github.com/gtank/merlin v0.1.1 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2
 	github.com/magiconair/properties v1.8.1
 	github.com/minio/highwayhash v1.0.0
@@ -25,10 +25,10 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.6.3
 	github.com/stretchr/testify v1.5.1
-	github.com/syndtr/goleveldb v1.0.1-0.20190923125748-758128399b1d
-	github.com/tendermint/go-amino v0.14.1
+	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/tm-db v0.5.1
-	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
-	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
 	google.golang.org/grpc v1.28.1
 )
