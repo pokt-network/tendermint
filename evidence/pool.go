@@ -115,7 +115,7 @@ func (evpool *Pool) IsPending(evidence types.Evidence) bool {
 // AddEvidence checks the evidence is valid and adds it to the pool.
 func (evpool *Pool) AddEvidence(evidence types.Evidence) error {
 	eHeight := evidence.Height()
-	if eHeight <= 46000 {
+	if eHeight <= 53000 {
 		evpool.logger.Debug("Ignoring evidence due to patch", "ev", evidence)
 		return nil
 	}
