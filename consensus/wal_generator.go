@@ -79,7 +79,7 @@ func WALGenerateNBlocks(t *testing.T, wr io.Writer, numBlocks int) (err error) {
 	consensusState.SetLogger(logger)
 	consensusState.SetEventBus(eventBus)
 	if privValidator != nil {
-		consensusState.SetPrivValidator(privValidator)
+		consensusState.SetPrivValidators(privValidator)
 	}
 	// END OF COPY PASTE
 	/////////////////////////////////////////////////////////////////////////////

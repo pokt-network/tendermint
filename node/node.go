@@ -161,7 +161,7 @@ type Node struct {
 	// config
 	config        *cfg.Config
 	genesisDoc    *types.GenesisDoc   // initial validator set
-	privValidator types.PrivValidator // local node's validator key
+	privValidator types.PrivValidators // local node's validator key
 
 	// network
 	transport   *p2p.MultiplexTransport
@@ -281,7 +281,7 @@ func doHandshake(
 	return nil
 }
 
-func logNodeStartupInfo(state sm.State, pubKey crypto.PubKey, logger, consensusLogger log.Logger) {
+func logNodeStartupInfo(state sm.State, pubKeys []crypto.PubKey, logger, consensusLogger log.Logger) {
 	// Log the version info.
 	logger.Info("Version info",
 		"software", version.TMCoreSemVer,
@@ -297,12 +297,14 @@ func logNodeStartupInfo(state sm.State, pubKey crypto.PubKey, logger, consensusL
 		)
 	}
 
-	addr := pubKey.Address()
-	// Log whether this node is a validator or an observer
-	if state.Validators.HasAddress(addr) {
-		consensusLogger.Info("This node is a validator", "addr", addr, "pubKey", pubKey)
-	} else {
-		consensusLogger.Info("This node is not a validator", "addr", addr, "pubKey", pubKey)
+	for _, pubKey := range pubKeys {
+		addr := pubKey.Address()
+		// Log whether this node is a validator or an observer
+		if state.Validators.HasAddress(addr) {
+			consensusLogger.Info("This node is a validator", "addr", addr, "pubKey", pubKey)
+		} else {
+			consensusLogger.Info("This node is not a validator", "addr", addr, "pubKey", pubKey)
+		}
 	}
 }
 
@@ -379,7 +381,7 @@ func createConsensusReactor(config *cfg.Config,
 	upgradeHeight int64,
 	mempool *mempl.CListMempool,
 	evidencePool *evidence.Pool,
-	privValidator types.PrivValidator,
+	privValidator types.PrivValidators,
 	csMetrics *cs.Metrics,
 	fastSync bool,
 	eventBus *types.EventBus,
@@ -397,7 +399,7 @@ func createConsensusReactor(config *cfg.Config,
 	)
 	consensusState.SetLogger(consensusLogger)
 	if privValidator != nil {
-		consensusState.SetPrivValidator(privValidator)
+		consensusState.SetPrivValidators(privValidator)
 	}
 	consensusReactor := cs.NewReactor(consensusState, fastSync, cs.ReactorMetrics(csMetrics))
 	consensusReactor.SetLogger(consensusLogger)
@@ -565,7 +567,7 @@ type BaseApp interface {
 // NewNode returns a new, ready to go, Tendermint Node.
 func NewNode(baseApp BaseApp, config *cfg.Config,
 	upgradeHeight int64,
-	privValidator types.PrivValidator,
+	privValidator types.PrivValidators,
 	nodeKey *p2p.NodeKey,
 	clientCreator proxy.ClientCreator,
 	txIndexer txindex.TxIndexer,
@@ -626,26 +628,16 @@ func NewNode(baseApp BaseApp, config *cfg.Config,
 	// what happened during block replay).
 	state = sm.LoadState(stateDB)
 
-	// If an address is provided, listen on the socket for a connection from an
-	// external signing process.
-	if config.PrivValidatorListenAddr != "" {
-		// FIXME: we should start services inside OnStart
-		privValidator, err = createAndStartPrivValidatorSocketClient(config.PrivValidatorListenAddr, logger)
-		if err != nil {
-			return nil, errors.Wrap(err, "error with private validator socket client")
-		}
-	}
-
-	pubKey, err := privValidator.GetPubKey()
+	pubKeys, err := privValidator.GetPubKeys()
 	if err != nil {
 		return nil, errors.Wrap(err, "can't get pubkey")
 	}
 
-	logNodeStartupInfo(state, pubKey, logger, consensusLogger)
+	logNodeStartupInfo(state, pubKeys, logger, consensusLogger)
 
 	// Decide whether to fast-sync or not
 	// We don't fast-sync when the only validator is us.
-	fastSync := config.FastSyncMode && !onlyValidatorIsUs(state, pubKey)
+	fastSync := config.FastSyncMode && !onlyValidatorIsUs(state, pubKeys[0])
 
 	csMetrics, p2pMetrics, memplMetrics, smMetrics := metricsProvider(genDoc.ChainID)
 
@@ -878,7 +870,7 @@ func (n *Node) OnStop() {
 
 // ConfigureRPC makes sure RPC has all the objects it needs to operate.
 func (n *Node) ConfigureRPC() error {
-	pubKey, err := n.privValidator.GetPubKey()
+	pubKeys, err := n.privValidator.GetPubKeys()
 	if err != nil {
 		return fmt.Errorf("can't get pubkey: %w", err)
 	}
@@ -892,7 +884,7 @@ func (n *Node) ConfigureRPC() error {
 		P2PPeers:       n.sw,
 		P2PTransport:   n,
 
-		PubKey:           pubKey,
+		PubKey:           pubKeys,
 		GenDoc:           n.genesisDoc,
 		TxIndexer:        n.txIndexer,
 		ConsensusReactor: n.consensusReactor,
@@ -1084,7 +1076,7 @@ func (n *Node) EventBus() *types.EventBus {
 
 // PrivValidator returns the Node's PrivValidator.
 // XXX: for convenience only!
-func (n *Node) PrivValidator() types.PrivValidator {
+func (n *Node) PrivValidator() types.PrivValidators {
 	return n.privValidator
 }
 
