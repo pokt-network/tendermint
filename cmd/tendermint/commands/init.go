@@ -30,16 +30,13 @@ func initFilesWithConfig(config *cfg.Config) error {
 	// private validator
 	privValKeyFile := config.PrivValidatorKeyFile()
 	privValStateFile := config.PrivValidatorStateFile()
-	var pv *privval.FilePV
+	var pv *privval.FilePVLite
 	if tmos.FileExists(privValKeyFile) {
 		pv = privval.LoadFilePV(privValKeyFile, privValStateFile)
 		logger.Info("Found private validator", "keyFile", privValKeyFile,
 			"stateFile", privValStateFile)
 	} else {
-		pv = privval.GenFilePV(privValKeyFile, privValStateFile)
-		pv.Save()
-		logger.Info("Generated private validator", "keyFile", privValKeyFile,
-			"stateFile", privValStateFile)
+		panic("privval file does not exist")
 	}
 
 	nodeKeyFile := config.NodeKeyFile()
@@ -62,15 +59,17 @@ func initFilesWithConfig(config *cfg.Config) error {
 			GenesisTime:     tmtime.Now(),
 			ConsensusParams: types.DefaultConsensusParams(),
 		}
-		pubKey, err := pv.GetPubKey()
+		pubKeys, err := pv.GetPubKeys()
 		if err != nil {
 			return errors.Wrap(err, "can't get pubkey")
 		}
-		genDoc.Validators = []types.GenesisValidator{{
-			Address: pubKey.Address(),
-			PubKey:  pubKey,
-			Power:   10,
-		}}
+		for _, pubKey := range pubKeys {
+			genDoc.Validators = append(genDoc.Validators, types.GenesisValidator{
+				Address: pubKey.Address(),
+				PubKey:  pubKey,
+				Power:   10,
+			})
+		}
 
 		if err := genDoc.SaveAs(genFile); err != nil {
 			return err

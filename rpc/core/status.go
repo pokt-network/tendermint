@@ -48,9 +48,15 @@ func Status(ctx *rpctypes.Context) (*ctypes.ResultStatus, error) {
 
 	// Return the very last voting power, not the voting power of this validator
 	// during the last block.
-	var votingPower int64
-	if val := validatorAtHeight(latestUncommittedHeight()); val != nil {
-		votingPower = val.VotingPower
+
+	vals := validatorsAtHeight(latestUncommittedHeight())
+	var vInfo []ctypes.ValidatorInfo
+	for _, val := range vals {
+		vInfo = append(vInfo, ctypes.ValidatorInfo{
+			Address:     val.Address,
+			PubKey:      val.PubKey,
+			VotingPower: val.VotingPower,
+		})
 	}
 
 	result := &ctypes.ResultStatus{
@@ -66,22 +72,25 @@ func Status(ctx *rpctypes.Context) (*ctypes.ResultStatus, error) {
 			EarliestBlockTime:   time.Unix(0, earliestBlockTimeNano),
 			CatchingUp:          env.ConsensusReactor.FastSync(),
 		},
-		ValidatorInfo: ctypes.ValidatorInfo{
-			Address:     env.PubKey.Address(),
-			PubKey:      env.PubKey,
-			VotingPower: votingPower,
-		},
+		ValidatorInfo: vInfo,
 	}
 
 	return result, nil
 }
 
-func validatorAtHeight(h int64) *types.Validator {
+func validatorsAtHeight(h int64) (v []*types.Validator) {
+	v = make([]*types.Validator, 0)
 	vals, err := sm.LoadValidators(env.StateDB, h)
 	if err != nil {
 		return nil
 	}
-	privValAddress := env.PubKey.Address()
-	_, val := vals.GetByAddress(privValAddress)
-	return val
+	for _, pubKey := range env.PubKey {
+		privValAddress := pubKey.Address()
+		_, val := vals.GetByAddress(privValAddress)
+		if val == nil {
+			continue
+		}
+		v = append(v, val)
+	}
+	return
 }
