@@ -78,7 +78,7 @@ type State struct {
 
 	// config details
 	config         *cfg.ConsensusConfig
-	privValidator  types.PrivValidator  // for signing votes
+	privValidator  types.PrivValidator  // for signing votes //pending cleanup
 	privValidators types.PrivValidators // for signing votes
 
 	// store blocks and commits
@@ -1058,7 +1058,7 @@ func (cs *State) createProposalBlock(pubKey crypto.PubKey) (block *types.Block, 
 		return
 	}
 
-	if cs.privValidator == nil {
+	if cs.privValidators == nil {
 		panic("entered createProposalBlock with privValidator being nil")
 	}
 
@@ -1983,7 +1983,7 @@ func (cs *State) voteTime() time.Time {
 
 // sign the vote and publish on internalMsgQueue
 func (cs *State) signAddVote(msgType types.SignedMsgType, hash []byte, header types.PartSetHeader) (votes []*types.Vote) {
-	if cs.privValidator == nil { // the node does not have a key
+	if cs.privValidators == nil { // the node does not have a key
 		return nil
 	}
 
