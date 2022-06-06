@@ -60,6 +60,10 @@ func (c *Client) Status() (*ctypes.ResultStatus, error) {
 	return c.next.Status()
 }
 
+func (c *Client) Synced() (*ctypes.ResultSync, error) {
+	return c.next.Synced()
+}
+
 func (c *Client) ABCIInfo() (*ctypes.ResultABCIInfo, error) {
 	return c.next.ABCIInfo()
 }
@@ -351,7 +355,6 @@ func (c *Client) TxSearch(query string, prove bool, page, perPage int, orderBy s
 	*ctypes.ResultTxSearch, error) {
 	return c.next.TxSearch(query, prove, page, perPage, orderBy)
 }
-
 
 // Validators fetches and verifies validators.
 //

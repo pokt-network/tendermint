@@ -83,6 +83,10 @@ func (c Client) Status() (*ctypes.ResultStatus, error) {
 	return core.Status(&rpctypes.Context{})
 }
 
+func (c Client) Synced() (*ctypes.ResultSync, error) {
+	return core.Synced(), nil
+}
+
 func (c Client) ABCIInfo() (*ctypes.ResultABCIInfo, error) {
 	return core.ABCIInfo(&rpctypes.Context{})
 }
