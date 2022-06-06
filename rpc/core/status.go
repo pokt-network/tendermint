@@ -94,3 +94,7 @@ func validatorsAtHeight(h int64) (v []*types.Validator) {
 	}
 	return
 }
+
+func Synced() *ctypes.ResultSync {
+	return &ctypes.ResultSync{IsSynced: !env.ConsensusReactor.FastSync()}
+}

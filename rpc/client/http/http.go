@@ -205,6 +205,10 @@ func (b *BatchHTTP) Count() int {
 //-----------------------------------------------------------------------------
 // baseRPCClient
 
+func (c *baseRPCClient) Synced() (*ctypes.ResultSync, error) {
+	return nil, nil
+}
+
 func (c *baseRPCClient) Status() (*ctypes.ResultStatus, error) {
 	result := new(ctypes.ResultStatus)
 	_, err := c.caller.Call("status", map[string]interface{}{}, result)
