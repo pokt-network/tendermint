@@ -2,75 +2,20 @@ package privval
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/libs/tempfile"
 	"github.com/tendermint/tendermint/types"
 	"io/ioutil"
 )
 
-// FilePVKeyLite stores the immutable part of PrivValidator.
-type FilePVKeyLite struct {
-	Address types.Address  `json:"address"`
-	PubKey  crypto.PubKey  `json:"pub_key"`
-	PrivKey crypto.PrivKey `json:"priv_key"`
+type PrivateKeyFile struct {
+	PrivateKey string `json:"priv_key"`
 }
 
 //-------------------------------------------------------------------------------
-
-// FilePVLastSignStateLite stores the mutable part of PrivValidator.
-type FilePVLastSignStateLite struct {
-	Height    int64            `json:"height"`
-	Round     int              `json:"round"`
-	Step      int8             `json:"step"`
-	Signature []byte           `json:"signature,omitempty"`
-	SignBytes tmbytes.HexBytes `json:"signbytes,omitempty"`
-}
-
-// CheckHRS checks the given height, round, step (HRS) against that of the
-// FilePVLastSignState. It returns an error if the arguments constitute a regression,
-// or if they match but the SignBytes are empty.
-// The returned boolean indicates whether the last Signature should be reused -
-// it returns true if the HRS matches the arguments and the SignBytes are not empty (indicating
-// we have already signed for this HRS, and can reuse the existing signature).
-// It panics if the HRS matches the arguments, there's a SignBytes, but no Signature.
-func (lss *FilePVLastSignStateLite) CheckHRS(height int64, round int, step int8) (bool, error) {
-
-	if lss.Height > height {
-		return false, fmt.Errorf("height regression. Got %v, last height %v", height, lss.Height)
-	}
-
-	if lss.Height == height {
-		if lss.Round > round {
-			return false, fmt.Errorf("round regression at height %v. Got %v, last round %v", height, round, lss.Round)
-		}
-
-		if lss.Round == round {
-			if lss.Step > step {
-				return false, fmt.Errorf(
-					"step regression at height %v round %v. Got %v, last step %v",
-					height,
-					round,
-					step,
-					lss.Step,
-				)
-			} else if lss.Step == step {
-				if lss.SignBytes != nil {
-					if lss.Signature == nil {
-						panic("pv: Signature is nil but SignBytes is not!")
-					}
-					return true, nil
-				}
-				return false, errors.New("no SignBytes found")
-			}
-		}
-	}
-	return false, nil
-}
 
 //-------------------------------------------------------------------------------
 
@@ -80,8 +25,8 @@ func (lss *FilePVLastSignStateLite) CheckHRS(height int64, round int, step int8)
 // It includes the LastSignature and LastSignBytes so we don't lose the signature
 // if the process crashes after signing but before the resulting consensus message is processed.
 type FilePVLite struct {
-	Key           []FilePVKeyLite
-	LastSignState []FilePVLastSignStateLite
+	Key           []FilePVKey
+	LastSignState []FilePVLastSignState
 	KeyFilepath   string
 	StateFilepath string
 }
@@ -92,12 +37,12 @@ func GenFilePV(keyFilePath, stateFilePath string) *FilePVLite {
 	privKey := ed25519.GenPrivKey()
 
 	return &FilePVLite{
-		Key: []FilePVKeyLite{{
+		Key: []FilePVKey{{
 			Address: privKey.PubKey().Address(),
 			PubKey:  privKey.PubKey(),
 			PrivKey: privKey,
 		}},
-		LastSignState: []FilePVLastSignStateLite{{
+		LastSignState: []FilePVLastSignState{{
 			Step: stepNone,
 		}},
 		KeyFilepath:   keyFilePath,
@@ -118,19 +63,21 @@ func loadFilePV(keyFilePath, stateFilePath string, loadState bool) *FilePVLite {
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
-	var pvKey []FilePVKeyLite
-	err = cdc.UnmarshalJSON(keyJSONBytes, &pvKey)
+
+	var pvKeys []FilePVKey
+
+	err = cdc.UnmarshalJSON(keyJSONBytes, &pvKeys)
 	if err != nil {
 		tmos.Exit(fmt.Sprintf("Error reading PrivValidator key from %v: %v\n", keyFilePath, err))
 	}
 
-	for _, key := range pvKey {
+	for _, key := range pvKeys {
 		// overwrite pubkey and address for convenience
 		key.PubKey = key.PrivKey.PubKey()
 		key.Address = key.PubKey.Address()
 	}
 
-	var pvState []FilePVLastSignStateLite
+	var pvState []FilePVLastSignState
 	if loadState {
 		stateJSONBytes, err := ioutil.ReadFile(stateFilePath)
 		if err != nil {
@@ -143,7 +90,7 @@ func loadFilePV(keyFilePath, stateFilePath string, loadState bool) *FilePVLite {
 	}
 
 	return &FilePVLite{
-		Key:           pvKey,
+		Key:           pvKeys,
 		LastSignState: pvState,
 		KeyFilepath:   keyFilePath,
 		StateFilepath: stateFilePath,
@@ -154,10 +101,10 @@ func loadFilePV(keyFilePath, stateFilePath string, loadState bool) *FilePVLite {
 // or else generates a new one and saves it to the filePaths.
 func LoadOrGenFilePV(keyFilePath, stateFilePath string) *FilePVLite {
 	var pv *FilePVLite
-	if tmos.FileExists(keyFilePath) {
+	if tmos.FileExists(keyFilePath) && tmos.FileExists(stateFilePath) {
 		pv = LoadFilePV(keyFilePath, stateFilePath)
 	} else {
-		panic("no key file found at " + keyFilePath)
+		panic("no key file found at " + keyFilePath + " or no state path at " + stateFilePath + " run pocket accounts set-validator(s)")
 	}
 	return pv
 }
@@ -320,6 +267,12 @@ func (pv *FilePVLite) saveSigned(height int64, round int, step int8,
 	pv.LastSignState[index].Step = step
 	pv.LastSignState[index].Signature = sig
 	pv.LastSignState[index].SignBytes = signBytes
+
+	// backwards compatibility if you're using normal pocket
+	if len(pv.LastSignState) == 1 {
+		pv.LastSignState[index].Save()
+		return
+	}
 	pv.SaveLastSignState()
 }
 
