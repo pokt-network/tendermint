@@ -219,6 +219,7 @@ type BaseConfig struct { //nolint: maligned
 	// If true, query the ABCI app on connecting to a new peer
 	// so the app can decide if we should keep the connection or not
 	FilterPeers bool `mapstructure:"filter_peers"` // false
+
 }
 
 // DefaultBaseConfig returns a default base configuration for a Tendermint node
@@ -1058,12 +1059,12 @@ type LevelDBOptions struct {
 
 func DefaultLevelDBOpts() LevelDBOptions {
 	return LevelDBOptions{
-		BlockCacheCapacity:     opt.DefaultBlockCacheCapacity/100,
+		BlockCacheCapacity:     opt.DefaultBlockCacheCapacity / 100,
 		BlockCacheEvictRemoved: false,
 		BlockSize:              opt.DefaultBlockSize,
 		DisableBufferPool:      true,
 		OpenFilesCacheCapacity: -1,
-		WriteBuffer:            opt.DefaultWriteBuffer/5,
+		WriteBuffer:            opt.DefaultWriteBuffer / 5,
 	}
 }
 
