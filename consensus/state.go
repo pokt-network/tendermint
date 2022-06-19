@@ -2005,13 +2005,13 @@ func (cs *State) signAddVote(msgType types.SignedMsgType, hash []byte, header ty
 			cs.sendInternalMessage(msgInfo{&VoteMessage{vote}, ""})
 			cs.Logger.Info("Signed and pushed vote", "height", cs.Height, "round", cs.Round, "vote", vote, "err", err)
 			votes = append(votes, vote)
+		} else {
+			//if !cs.replayMode {
+			cs.Logger.Error("Error signing vote", "height", cs.Height, "round", cs.Round, "vote", vote, "err", err)
+			//}
 		}
-		//if !cs.replayMode {
-		cs.Logger.Error("Error signing vote", "height", cs.Height, "round", cs.Round, "vote", vote, "err", err)
-		//}
-
 	}
-	return nil
+	return votes
 }
 
 //---------------------------------------------------------
