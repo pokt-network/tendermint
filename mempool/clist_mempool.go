@@ -415,15 +415,20 @@ func (mem *CListMempool) resCbFirstTime(
 				gasWanted: r.CheckTx.GasWanted,
 				tx:        tx,
 			}
-			memTx.senders.Store(peerID, true)
-			mem.addTx(memTx)
-			mem.logger.Info("Added good transaction",
-				"tx", txID(tx),
-				"res", r,
-				"height", memTx.height,
-				"total", mem.Size(),
-			)
-			mem.notifyTxsAvailable()
+
+			//If cache size is 0 or Tx is new to cache but exist in mempool do nothing
+			if _, found := mem.txsMap.Load(txKey(memTx.tx)); !found {
+				memTx.senders.Store(peerID, true)
+				mem.addTx(memTx)
+				mem.logger.Info("Added good transaction",
+					"tx", txID(tx),
+					"res", r,
+					"height", memTx.height,
+					"total", mem.Size(),
+				)
+				mem.notifyTxsAvailable()
+			}
+
 		} else {
 			// ignore bad transaction
 			mem.logger.Info("Rejected bad transaction",
