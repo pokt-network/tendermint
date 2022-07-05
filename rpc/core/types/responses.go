@@ -89,8 +89,8 @@ type ResultStatus struct {
 }
 
 // Node Status
-type ResultSync struct {
-	IsSynced bool `json:"is_synced"`
+type ResultConsensusReactorStatus struct {
+	IsCatchingUp bool `json:"is_catching_up"`
 }
 
 // Is TxIndexing enabled

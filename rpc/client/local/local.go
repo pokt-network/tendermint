@@ -70,8 +70,9 @@ func (c *Local) Status() (*ctypes.ResultStatus, error) {
 	return core.Status(c.ctx)
 }
 
-func (c *Local) Synced() (*ctypes.ResultSync, error) {
-	return core.Synced(), nil
+// ConsensusReactorStatus returns the status of the consensus reactor
+func (c *Local) ConsensusReactorStatus() (*ctypes.ResultConsensusReactorStatus, error) {
+	return core.ConsensusReactorStatus(), nil
 }
 
 func (c *Local) ABCIInfo() (*ctypes.ResultABCIInfo, error) {
