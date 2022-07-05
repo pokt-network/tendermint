@@ -95,6 +95,7 @@ func validatorsAtHeight(h int64) (v []*types.Validator) {
 	return
 }
 
-func ConsensusReactorStatus() *ctypes.ResultConsensusReactorStatus {
-	return &ctypes.ResultConsensusReactorStatus{IsCatchingUp: env.ConsensusReactor.FastSync()}
+// ConsensusReactorStatus returns Tendermint consensus reactor status - whether it's catching up in fast sync mode
+func ConsensusReactorStatus(ctx *rpctypes.Context) (*ctypes.ResultConsensusReactorStatus, error) {
+	return &ctypes.ResultConsensusReactorStatus{IsCatchingUp: env.ConsensusReactor.FastSync()}, nil
 }

@@ -84,7 +84,7 @@ func (c Client) Status() (*ctypes.ResultStatus, error) {
 }
 
 func (c Client) ConsensusReactorStatus() (*ctypes.ResultConsensusReactorStatus, error) {
-	return core.ConsensusReactorStatus(), nil
+	return core.ConsensusReactorStatus(&rpctypes.Context{})
 }
 
 func (c Client) ABCIInfo() (*ctypes.ResultABCIInfo, error) {

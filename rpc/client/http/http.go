@@ -207,7 +207,7 @@ func (b *BatchHTTP) Count() int {
 
 func (c *baseRPCClient) ConsensusReactorStatus() (*ctypes.ResultConsensusReactorStatus, error) {
 	result := new(ctypes.ResultConsensusReactorStatus)
-	_, err := c.caller.Call("is_catching_up", map[string]interface{}{}, result)
+	_, err := c.caller.Call("consensus_reactor_status", map[string]interface{}{}, result)
 	if err != nil {
 		return nil, errors.Wrap(err, "ConsensusReactorStatus")
 	}
