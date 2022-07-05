@@ -38,12 +38,14 @@ func GenFilePV(keyFilePath, stateFilePath string) *FilePVLite {
 
 	return &FilePVLite{
 		Key: []FilePVKey{{
-			Address: privKey.PubKey().Address(),
-			PubKey:  privKey.PubKey(),
-			PrivKey: privKey,
+			Address:  privKey.PubKey().Address(),
+			PubKey:   privKey.PubKey(),
+			PrivKey:  privKey,
+			filePath: keyFilePath,
 		}},
 		LastSignState: []FilePVLastSignState{{
-			Step: stepNone,
+			Step:     stepNone,
+			filePath: stateFilePath,
 		}},
 		KeyFilepath:   keyFilePath,
 		StateFilepath: stateFilePath,
