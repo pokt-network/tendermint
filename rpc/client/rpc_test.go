@@ -106,6 +106,16 @@ func TestStatus(t *testing.T) {
 	}
 }
 
+// Make sure status is correct (we connect properly)
+func TestConsensusReactorStatus(t *testing.T) {
+	for i, c := range GetClients() {
+		status, err := c.ConsensusReactorStatus()
+		require.Nil(t, err, "%d: %+v", i, err)
+		require.NotNil(t, status)
+		require.NotEmpty(t, status)
+	}
+}
+
 // Make sure info is correct (we connect properly)
 func TestInfo(t *testing.T) {
 	for i, c := range GetClients() {
