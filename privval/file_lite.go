@@ -31,25 +31,34 @@ type FilePVLite struct {
 	StateFilepath string
 }
 
-// GenFilePV generates a new validator with randomly generated private key
-// and sets the filePaths, but does not call Save().
-func GenFilePV(keyFilePath, stateFilePath string) *FilePVLite {
-	privKey := ed25519.GenPrivKey()
-
-	return &FilePVLite{
-		Key: []FilePVKey{{
+func GenFilePVs(keyFilePath, stateFilePath string, numOfKeys uint) *FilePVLite {
+	filePvKeys := []FilePVKey{}
+	lastSignStates := []FilePVLastSignState{}
+	for i := 0; i < int(numOfKeys); i++ {
+		privKey := ed25519.GenPrivKey()
+		filePvKeys = append(filePvKeys, FilePVKey{
 			Address:  privKey.PubKey().Address(),
 			PubKey:   privKey.PubKey(),
 			PrivKey:  privKey,
 			filePath: keyFilePath,
-		}},
-		LastSignState: []FilePVLastSignState{{
+		})
+		lastSignStates = append(lastSignStates, FilePVLastSignState{
 			Step:     stepNone,
 			filePath: stateFilePath,
-		}},
+		})
+	}
+	return &FilePVLite{
+		Key:           filePvKeys,
+		LastSignState: lastSignStates,
 		KeyFilepath:   keyFilePath,
 		StateFilepath: stateFilePath,
 	}
+}
+
+// GenFilePV generates a new validator with randomly generated private key
+// and sets the filePaths, but does not call Save().
+func GenFilePV(keyFilePath, stateFilePath string) *FilePVLite {
+	return GenFilePVs(keyFilePath, stateFilePath, 1)
 }
 
 // LoadFilePV loads a FilePV from the filePaths.  The FilePV handles double
