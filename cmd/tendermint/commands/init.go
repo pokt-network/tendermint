@@ -30,9 +30,9 @@ func initFilesWithConfig(config *cfg.Config) error {
 	// private validator
 	privValKeyFile := config.PrivValidatorKeyFile()
 	privValStateFile := config.PrivValidatorStateFile()
-	var pv *privval.FilePVLite
+	var pv *privval.FilePVLean
 	if tmos.FileExists(privValKeyFile) {
-		pv = privval.LoadFilePV(privValKeyFile, privValStateFile)
+		pv = privval.LoadFilePVLean(privValKeyFile, privValStateFile)
 		logger.Info("Found private validator", "keyFile", privValKeyFile,
 			"stateFile", privValStateFile)
 	} else {

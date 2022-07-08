@@ -149,7 +149,7 @@ type FilePV struct {
 
 // GenFilePV generates a new validator with randomly generated private key
 // and sets the filePaths, but does not call Save().
-func GenFilePVLegacy(keyFilePath, stateFilePath string) *FilePV {
+func GenFilePV(keyFilePath, stateFilePath string) *FilePV {
 	privKey := ed25519.GenPrivKey()
 
 	return &FilePV{
@@ -166,21 +166,21 @@ func GenFilePVLegacy(keyFilePath, stateFilePath string) *FilePV {
 	}
 }
 
-// LoadFilePVLegacy loads a FilePV from the filePaths.  The FilePV handles double
+// LoadFilePV loads a FilePV from the filePaths.  The FilePV handles double
 // signing prevention by persisting data to the stateFilePath.  If either file path
 // does not exist, the program will exit.
-func LoadFilePVLegacy(keyFilePath, stateFilePath string) *FilePV {
-	return loadFilePVLegacy(keyFilePath, stateFilePath, true)
+func LoadFilePV(keyFilePath, stateFilePath string) *FilePV {
+	return loadFilePV(keyFilePath, stateFilePath, true)
 }
 
 // LoadFilePVEmptyState loads a FilePV from the given keyFilePath, with an empty LastSignState.
 // If the keyFilePath does not exist, the program will exit.
-func LoadFilePVEmptyStateLegacy(keyFilePath, stateFilePath string) *FilePV {
-	return loadFilePVLegacy(keyFilePath, stateFilePath, false)
+func LoadFilePVEmptyState(keyFilePath, stateFilePath string) *FilePV {
+	return loadFilePV(keyFilePath, stateFilePath, false)
 }
 
 // If loadState is true, we load from the stateFilePath. Otherwise, we use an empty LastSignState.
-func loadFilePVLegacy(keyFilePath, stateFilePath string, loadState bool) *FilePV {
+func loadFilePV(keyFilePath, stateFilePath string, loadState bool) *FilePV {
 	keyJSONBytes, err := ioutil.ReadFile(keyFilePath)
 	if err != nil {
 		tmos.Exit(err.Error())
@@ -218,12 +218,12 @@ func loadFilePVLegacy(keyFilePath, stateFilePath string, loadState bool) *FilePV
 
 // LoadOrGenFilePV loads a FilePV from the given filePaths
 // or else generates a new one and saves it to the filePaths.
-func LoadOrGenFilePVLegacy(keyFilePath, stateFilePath string) *FilePV {
+func LoadOrGenFilePV(keyFilePath, stateFilePath string) *FilePV {
 	var pv *FilePV
 	if tmos.FileExists(keyFilePath) {
-		pv = LoadFilePVLegacy(keyFilePath, stateFilePath)
+		pv = LoadFilePV(keyFilePath, stateFilePath)
 	} else {
-		pv = GenFilePVLegacy(keyFilePath, stateFilePath)
+		pv = GenFilePV(keyFilePath, stateFilePath)
 		pv.Save()
 	}
 	return pv

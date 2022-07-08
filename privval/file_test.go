@@ -24,16 +24,16 @@ func TestGenLoadValidator(t *testing.T) {
 	tempStateFile, err := ioutil.TempFile("", "priv_validator_state_")
 	require.Nil(t, err)
 
-	privVal := GenFilePV(tempKeyFile.Name(), tempStateFile.Name())
+	privVal := GenFilePVLean(tempKeyFile.Name(), tempStateFile.Name())
 
 	height := int64(100)
-	privVal.LastSignState.Height = height
+	privVal.LastSignStates.Height = height
 	privVal.Save()
 	addr := privVal.GetAddress()
 
-	privVal = LoadFilePV(tempKeyFile.Name(), tempStateFile.Name())
+	privVal = LoadFilePVLean(tempKeyFile.Name(), tempStateFile.Name())
 	assert.Equal(addr, privVal.GetAddress(), "expected privval addr to be the same")
-	assert.Equal(height, privVal.LastSignState.Height, "expected privval.LastHeight to have been saved")
+	assert.Equal(height, privVal.LastSignStates.Height, "expected privval.LastHeight to have been saved")
 }
 
 func TestResetValidator(t *testing.T) {
@@ -42,26 +42,26 @@ func TestResetValidator(t *testing.T) {
 	tempStateFile, err := ioutil.TempFile("", "priv_validator_state_")
 	require.Nil(t, err)
 
-	privVal := GenFilePV(tempKeyFile.Name(), tempStateFile.Name())
+	privVal := GenFilePVLean(tempKeyFile.Name(), tempStateFile.Name())
 	emptyState := FilePVLastSignState{filePath: tempStateFile.Name()}
 
 	// new priv val has empty state
-	assert.Equal(t, privVal.LastSignState, emptyState)
+	assert.Equal(t, privVal.LastSignStates, emptyState)
 
 	// test vote
 	height, round := int64(10), 1
 	voteType := byte(types.PrevoteType)
 	blockID := types.BlockID{Hash: []byte{1, 2, 3}, PartsHeader: types.PartSetHeader{}}
-	vote := newVote(privVal.Key.Address, 0, height, round, voteType, blockID)
+	vote := newVote(privVal.Keys.Address, 0, height, round, voteType, blockID)
 	err = privVal.SignVote("mychainid", vote)
 	assert.NoError(t, err, "expected no error signing vote")
 
 	// priv val after signing is not same as empty
-	assert.NotEqual(t, privVal.LastSignState, emptyState)
+	assert.NotEqual(t, privVal.LastSignStates, emptyState)
 
 	// priv val after AcceptNewConnection is same as empty
 	privVal.Reset()
-	assert.Equal(t, privVal.LastSignState, emptyState)
+	assert.Equal(t, privVal.LastSignStates, emptyState)
 }
 
 func TestLoadOrGenValidator(t *testing.T) {
@@ -161,7 +161,7 @@ func TestSignVote(t *testing.T) {
 	tempStateFile, err := ioutil.TempFile("", "priv_validator_state_")
 	require.Nil(t, err)
 
-	privVal := GenFilePV(tempKeyFile.Name(), tempStateFile.Name())
+	privVal := GenFilePVLean(tempKeyFile.Name(), tempStateFile.Name())
 
 	block1 := types.BlockID{Hash: []byte{1, 2, 3}, PartsHeader: types.PartSetHeader{}}
 	block2 := types.BlockID{Hash: []byte{3, 2, 1}, PartsHeader: types.PartSetHeader{}}
@@ -170,7 +170,7 @@ func TestSignVote(t *testing.T) {
 	voteType := byte(types.PrevoteType)
 
 	// sign a vote for first time
-	vote := newVote(privVal.Key.Address, 0, height, round, voteType, block1)
+	vote := newVote(privVal.Keys.Address, 0, height, round, voteType, block1)
 	err = privVal.SignVote("mychainid", vote)
 	assert.NoError(err, "expected no error signing vote")
 
@@ -180,10 +180,10 @@ func TestSignVote(t *testing.T) {
 
 	// now try some bad votes
 	cases := []*types.Vote{
-		newVote(privVal.Key.Address, 0, height, round-1, voteType, block1),   // round regression
-		newVote(privVal.Key.Address, 0, height-1, round, voteType, block1),   // height regression
-		newVote(privVal.Key.Address, 0, height-2, round+4, voteType, block1), // height regression and different round
-		newVote(privVal.Key.Address, 0, height, round, voteType, block2),     // different block
+		newVote(privVal.Keys.Address, 0, height, round-1, voteType, block1),   // round regression
+		newVote(privVal.Keys.Address, 0, height-1, round, voteType, block1),   // height regression
+		newVote(privVal.Keys.Address, 0, height-2, round+4, voteType, block1), // height regression and different round
+		newVote(privVal.Keys.Address, 0, height, round, voteType, block2),     // different block
 	}
 
 	for _, c := range cases {
@@ -207,7 +207,7 @@ func TestSignProposal(t *testing.T) {
 	tempStateFile, err := ioutil.TempFile("", "priv_validator_state_")
 	require.Nil(t, err)
 
-	privVal := GenFilePV(tempKeyFile.Name(), tempStateFile.Name())
+	privVal := GenFilePVLean(tempKeyFile.Name(), tempStateFile.Name())
 
 	block1 := types.BlockID{Hash: []byte{1, 2, 3}, PartsHeader: types.PartSetHeader{Total: 5, Hash: []byte{1, 2, 3}}}
 	block2 := types.BlockID{Hash: []byte{3, 2, 1}, PartsHeader: types.PartSetHeader{Total: 10, Hash: []byte{3, 2, 1}}}
@@ -249,7 +249,7 @@ func TestDifferByTimestamp(t *testing.T) {
 	tempStateFile, err := ioutil.TempFile("", "priv_validator_state_")
 	require.Nil(t, err)
 
-	privVal := GenFilePV(tempKeyFile.Name(), tempStateFile.Name())
+	privVal := GenFilePVLean(tempKeyFile.Name(), tempStateFile.Name())
 
 	block1 := types.BlockID{Hash: []byte{1, 2, 3}, PartsHeader: types.PartSetHeader{Total: 5, Hash: []byte{1, 2, 3}}}
 	height, round := int64(10), 1
@@ -280,7 +280,7 @@ func TestDifferByTimestamp(t *testing.T) {
 	{
 		voteType := byte(types.PrevoteType)
 		blockID := types.BlockID{Hash: []byte{1, 2, 3}, PartsHeader: types.PartSetHeader{}}
-		vote := newVote(privVal.Key.Address, 0, height, round, voteType, blockID)
+		vote := newVote(privVal.Keys.Address, 0, height, round, voteType, blockID)
 		err := privVal.SignVote("mychainid", vote)
 		assert.NoError(t, err, "expected no error signing vote")
 

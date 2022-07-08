@@ -44,7 +44,7 @@ func WALGenerateNBlocks(t *testing.T, wr io.Writer, numBlocks int) (err error) {
 	// NOTE: we don't do handshake so need to set state.Version.Consensus.App directly.
 	privValidatorKeyFile := config.PrivValidatorKeyFile()
 	privValidatorStateFile := config.PrivValidatorStateFile()
-	privValidator := privval.LoadOrGenFilePV(privValidatorKeyFile, privValidatorStateFile)
+	privValidators := privval.LoadOrGenFilePVLean(privValidatorKeyFile, privValidatorStateFile)
 	genDoc, err := types.GenesisDocFromFile(config.GenesisFile())
 	if err != nil {
 		return errors.Wrap(err, "failed to read genesis file")
@@ -78,8 +78,8 @@ func WALGenerateNBlocks(t *testing.T, wr io.Writer, numBlocks int) (err error) {
 	consensusState := NewState(config.Consensus, state.Copy(), 0, blockExec, blockStore, mempool, evpool)
 	consensusState.SetLogger(logger)
 	consensusState.SetEventBus(eventBus)
-	if privValidator != nil {
-		consensusState.SetPrivValidators(privValidator)
+	if privValidators != nil {
+		consensusState.SetPrivValidators(privValidators)
 	}
 	// END OF COPY PASTE
 	/////////////////////////////////////////////////////////////////////////////
