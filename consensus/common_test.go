@@ -709,7 +709,7 @@ func randConsensusNetWithPeers(
 				panic(err)
 			}
 
-			privVal = privval.GenFilePV(tempKeyFile.Name(), tempStateFile.Name())
+			privVal = privval.GenFilePVLean(tempKeyFile.Name(), tempStateFile.Name())
 		}
 
 		app := appFunc(path.Join(config.DBDir(), fmt.Sprintf("%s_%d", testName, i)))

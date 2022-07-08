@@ -90,9 +90,9 @@ func NewTestHarness(logger log.Logger, cfg TestHarnessConfig) (*TestHarness, err
 	keyFile := ExpandPath(cfg.KeyFile)
 	stateFile := ExpandPath(cfg.StateFile)
 	logger.Info("Loading private validator configuration", "keyFile", keyFile, "stateFile", stateFile)
-	// NOTE: LoadFilePV ultimately calls os.Exit on failure. No error will be
+	// NOTE: LoadFilePVLean ultimately calls os.Exit on failure. No error will be
 	// returned if this call fails.
-	fpv := privval.LoadFilePV(keyFile, stateFile)
+	fpv := privval.LoadFilePVLean(keyFile, stateFile)
 
 	genesisFile := ExpandPath(cfg.GenesisFile)
 	logger.Info("Loading chain ID from genesis file", "genesisFile", genesisFile)

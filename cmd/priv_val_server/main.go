@@ -34,7 +34,7 @@ func main() {
 		"privStatePath", *privValStatePath,
 	)
 
-	pv := privval.LoadFilePV(*privValKeyPath, *privValStatePath)
+	pv := privval.LoadFilePVLean(*privValKeyPath, *privValStatePath)
 
 	var dialer privval.SocketDialer
 	protocol, address := tmnet.ProtocolAndAddress(*addr)
