@@ -65,6 +65,9 @@ type CListMempool struct {
 	logger log.Logger
 
 	metrics *Metrics
+
+	//Max amount of blocks a tx is allowed to stay on the mempool
+	maxTxLife int64
 }
 
 var _ Mempool = &CListMempool{}
@@ -88,6 +91,7 @@ func NewCListMempool(
 		recheckEnd:    nil,
 		logger:        log.NewNopLogger(),
 		metrics:       NopMetrics(),
+		maxTxLife:     int64(2),
 	}
 	if config.CacheSize > 0 {
 		mempool.cache = newMapTxCache(config.CacheSize)
@@ -462,7 +466,12 @@ func (mem *CListMempool) resCbRecheck(req *abci.Request, res *abci.Response) {
 			postCheckErr = mem.postCheck(tx, r.CheckTx)
 		}
 		if (r.CheckTx.Code == abci.CodeTypeOK) && postCheckErr == nil {
-			// Good, nothing to do.
+			// Check if tx is stale
+			if mem.height-memTx.height > mem.maxTxLife {
+				mem.logger.Info("Tx is stale, no longer valid", "tx", txID(tx), "res", r, "err", postCheckErr)
+				// NOTE: we don't remove tx from the cache
+				mem.removeTx(tx, mem.recheckCursor, false)
+			}
 		} else {
 			// Tx became invalidated due to newly committed block.
 			mem.logger.Info("Tx is no longer valid", "tx", txID(tx), "res", r, "err", postCheckErr)
