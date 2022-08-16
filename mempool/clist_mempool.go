@@ -65,6 +65,9 @@ type CListMempool struct {
 	logger log.Logger
 
 	metrics *Metrics
+
+	//Max amount of blocks a tx is allowed to stay on the mempool
+	maxTxLife int64
 }
 
 var _ Mempool = &CListMempool{}
@@ -88,6 +91,7 @@ func NewCListMempool(
 		recheckEnd:    nil,
 		logger:        log.NewNopLogger(),
 		metrics:       NopMetrics(),
+		maxTxLife:     int64(2),
 	}
 	if config.CacheSize > 0 {
 		mempool.cache = newMapTxCache(config.CacheSize)
@@ -415,15 +419,20 @@ func (mem *CListMempool) resCbFirstTime(
 				gasWanted: r.CheckTx.GasWanted,
 				tx:        tx,
 			}
-			memTx.senders.Store(peerID, true)
-			mem.addTx(memTx)
-			mem.logger.Info("Added good transaction",
-				"tx", txID(tx),
-				"res", r,
-				"height", memTx.height,
-				"total", mem.Size(),
-			)
-			mem.notifyTxsAvailable()
+
+			//If cache size is 0 or Tx is new to cache but exist in mempool do nothing
+			if _, found := mem.txsMap.Load(txKey(memTx.tx)); !found {
+				memTx.senders.Store(peerID, true)
+				mem.addTx(memTx)
+				mem.logger.Info("Added good transaction",
+					"tx", txID(tx),
+					"res", r,
+					"height", memTx.height,
+					"total", mem.Size(),
+				)
+				mem.notifyTxsAvailable()
+			}
+
 		} else {
 			// ignore bad transaction
 			mem.logger.Info("Rejected bad transaction",
@@ -457,7 +466,12 @@ func (mem *CListMempool) resCbRecheck(req *abci.Request, res *abci.Response) {
 			postCheckErr = mem.postCheck(tx, r.CheckTx)
 		}
 		if (r.CheckTx.Code == abci.CodeTypeOK) && postCheckErr == nil {
-			// Good, nothing to do.
+			// Check if tx is stale
+			if mem.height-memTx.height > mem.maxTxLife {
+				mem.logger.Info("Tx is stale, no longer valid", "tx", txID(tx), "res", r, "err", postCheckErr)
+				// NOTE: we don't remove tx from the cache
+				mem.removeTx(tx, mem.recheckCursor, false)
+			}
 		} else {
 			// Tx became invalidated due to newly committed block.
 			mem.logger.Info("Tx is no longer valid", "tx", txID(tx), "res", r, "err", postCheckErr)
