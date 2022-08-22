@@ -2028,7 +2028,7 @@ func (cs *State) signAddVote(msgType types.SignedMsgType, hash []byte, header ty
 	for _, pubKey := range pubKeys {
 		// If the node not in the validator set, do nothing.
 		if !cs.Validators.HasAddress(pubKey.Address()) {
-			return nil
+			continue
 		}
 
 		// TODO: pass pubKey to signVote
