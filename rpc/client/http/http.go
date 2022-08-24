@@ -205,6 +205,15 @@ func (b *BatchHTTP) Count() int {
 //-----------------------------------------------------------------------------
 // baseRPCClient
 
+func (c *baseRPCClient) ConsensusReactorStatus() (*ctypes.ResultConsensusReactorStatus, error) {
+	result := new(ctypes.ResultConsensusReactorStatus)
+	_, err := c.caller.Call("consensus_reactor_status", map[string]interface{}{}, result)
+	if err != nil {
+		return nil, errors.Wrap(err, "ConsensusReactorStatus")
+	}
+	return result, nil
+}
+
 func (c *baseRPCClient) Status() (*ctypes.ResultStatus, error) {
 	result := new(ctypes.ResultStatus)
 	_, err := c.caller.Call("status", map[string]interface{}{}, result)

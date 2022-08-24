@@ -81,6 +81,7 @@ type HistoryClient interface {
 // StatusClient provides access to general chain info.
 type StatusClient interface {
 	Status() (*ctypes.ResultStatus, error)
+	ConsensusReactorStatus() (*ctypes.ResultConsensusReactorStatus, error)
 }
 
 // NetworkClient is general info about the network state. May not be needed

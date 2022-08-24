@@ -23,7 +23,7 @@ func showValidator(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("private validator file %s does not exist", keyFilePath)
 	}
 
-	pv := privval.LoadFilePV(keyFilePath, config.PrivValidatorStateFile())
+	pv := privval.LoadFilePVLean(keyFilePath, config.PrivValidatorStateFile())
 
 	pubKey, err := pv.GetPubKey()
 	if err != nil {

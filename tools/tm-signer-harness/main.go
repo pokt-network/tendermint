@@ -134,8 +134,8 @@ func runTestHarness(acceptRetries int, bindAddr, tmhome string) {
 func extractKey(tmhome, outputPath string) {
 	keyFile := filepath.Join(internal.ExpandPath(tmhome), "config", "priv_validator_key.json")
 	stateFile := filepath.Join(internal.ExpandPath(tmhome), "data", "priv_validator_state.json")
-	fpv := privval.LoadFilePV(keyFile, stateFile)
-	pkb := [64]byte(fpv.Key.PrivKey.(ed25519.PrivKeyEd25519))
+	fpv := privval.LoadFilePVLean(keyFile, stateFile)
+	pkb := [64]byte(fpv.Keys.PrivKey.(ed25519.PrivKeyEd25519))
 	if err := ioutil.WriteFile(internal.ExpandPath(outputPath), pkb[:32], 0644); err != nil {
 		logger.Info("Failed to write private key", "output", outputPath, "err", err)
 		os.Exit(1)
