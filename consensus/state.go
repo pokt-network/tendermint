@@ -821,7 +821,9 @@ func (cs *State) handleTxsAvailable() {
 // Used internally by handleTimeout and handleMsg to make state transitions
 
 // Enter: `timeoutNewHeight` by startTime (commitTime+timeoutCommit),
-// 	or, if SkipTimeoutCommit==true, after receiving all precommits from (height,round-1)
+//
+//	or, if SkipTimeoutCommit==true, after receiving all precommits from (height,round-1)
+//
 // Enter: `timeoutPrecommits` after any +2/3 precommits from (height,round-1)
 // Enter: +2/3 precommits for nil at (height,round-1)
 // Enter: +2/3 prevotes any or +2/3 precommits for block or any from (height, round)
@@ -904,7 +906,9 @@ func (cs *State) needProofBlock(height int64) bool {
 
 // Enter (CreateEmptyBlocks): from enterNewRound(height,round)
 // Enter (CreateEmptyBlocks, CreateEmptyBlocksInterval > 0 ):
-// 		after enterNewRound(height,round), after timeout of CreateEmptyBlocksInterval
+//
+//	after enterNewRound(height,round), after timeout of CreateEmptyBlocksInterval
+//
 // Enter (!CreateEmptyBlocks) : after enterNewRound(height,round), once txs are in the mempool
 func (cs *State) enterPropose(height int64, round int) {
 	logger := cs.Logger.With("height", height, "round", round)
@@ -951,6 +955,11 @@ func (cs *State) enterPropose(height int64, round int) {
 		logger.Error("Error on retrival of pubkey", "err", err)
 		return
 	}
+
+	//Change isProposer with the new getProposer to optimize for N validators.
+	//We only look for the proposer once and do multiple []byte comparison.
+	proposerAddress := cs.getProposer().Address
+
 	for _, pubKey := range pubKeys {
 		address := pubKey.Address()
 
@@ -960,7 +969,7 @@ func (cs *State) enterPropose(height int64, round int) {
 			continue
 		}
 
-		if cs.isProposer(address) {
+		if bytes.Equal(address, proposerAddress) {
 			logger.Info("enterPropose: Our turn to propose")
 			cs.decideProposal(height, round, pubKey)
 			return
@@ -968,6 +977,18 @@ func (cs *State) enterPropose(height int64, round int) {
 			logger.Info("enterPropose: Not our turn to propose")
 		}
 	}
+}
+
+func (cs *State) getProposer() *types.Validator {
+	var lastCommitBytes []byte
+	var err error
+	if cs.UpgradeHeight != 0 && cs.Height >= cs.UpgradeHeight && cs.Height < 30040 {
+		lastCommitBytes, err = cs.LastCommit.MarshalJSON()
+		if err != nil {
+			panic(err)
+		}
+	}
+	return cs.Validators.GetProposerRandomized(cs.GetPreviousBlockHash(), cs.UpgradeHeight, cs.Height, lastCommitBytes, uint64(cs.Round))
 }
 
 func (cs *State) isProposer(address []byte) bool {
