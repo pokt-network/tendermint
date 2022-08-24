@@ -1,4 +1,4 @@
-module github.com/fiagdao/tendermint
+module github.com/pokt-network/tendermint
 
 go 1.17
 
