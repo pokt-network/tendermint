@@ -37,7 +37,7 @@ var (
 
 var chainHaltHeight = int64(74622)
 var chainHaltRound = 100
-var timeoutWait = time.Second * 3
+var timeoutWait = time.Second * 20
 var timeoutPropose = time.Second * 600
 
 //-----------------------------------------------------------------------------
