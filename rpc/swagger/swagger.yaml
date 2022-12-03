@@ -411,6 +411,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /consensus_reactor_status:
+    get:
+      summary: Status of Consensus Reactor
+      operationId: consensus_reactor_status
+      tags:
+        - Info
+      description: |
+        Get Tendermint consensus reactor status, returns info about whether if it's catching up via fast sync
+      responses:
+        200:
+          description: Status of the node
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsensusReactorStatus"
+        500:
+          description: empty error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /net_info:
     get:
       summary: Network informations
@@ -1163,6 +1184,13 @@ components:
           $ref: "#/components/schemas/SyncInfo"
         validator_info:
           $ref: "#/components/schemas/ValidatorInfo"
+    ConsensusReactorStatus:
+      description: ConsensusReactorStatus Response
+      type: object
+      properties:
+        is_catching_up:
+          type: boolean
+          example: false
     StatusResponse:
       description: Status Response
       allOf:

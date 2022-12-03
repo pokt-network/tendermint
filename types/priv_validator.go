@@ -18,6 +18,13 @@ type PrivValidator interface {
 	SignProposal(chainID string, proposal *Proposal) error
 }
 
+type PrivValidators interface {
+	GetPubKeys() ([]crypto.PubKey, error)
+
+	SignVote(chainID string, vote *Vote, publicKey crypto.PubKey) error
+	SignProposal(chainID string, proposal *Proposal, publicKey crypto.PubKey) error
+}
+
 //----------------------------------------
 // Misc.
 

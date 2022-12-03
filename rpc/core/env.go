@@ -78,7 +78,7 @@ type Environment struct {
 	P2PTransport   transport
 
 	// objects
-	PubKey           crypto.PubKey
+	PubKey           []crypto.PubKey
 	GenDoc           *types.GenesisDoc // cache the genesis structure
 	TxIndexer        txindex.TxIndexer
 	ConsensusReactor *consensus.Reactor
