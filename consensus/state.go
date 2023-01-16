@@ -10,6 +10,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/pkg/errors"
 
 	"github.com/tendermint/tendermint/libs/fail"
