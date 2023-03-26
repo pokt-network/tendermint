@@ -1,9 +1,10 @@
 package abcicli
 
 import (
-	types2 "github.com/tendermint/tendermint/types"
 	"sync"
 	"time"
+
+	types2 "github.com/tendermint/tendermint/types"
 
 	types "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/service"
