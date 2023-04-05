@@ -2,6 +2,7 @@ module github.com/pokt-network/tendermint
 
 go 1.18
 
+// TODO: Update the main revision after changes are merged
 replace github.com/tendermint/tendermint => github.com/pokt-network/tendermint main
 
 require (
