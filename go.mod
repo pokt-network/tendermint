@@ -2,8 +2,7 @@ module github.com/pokt-network/tendermint
 
 go 1.18
 
-// replace github.com/tendermint/tendermint => github.com/pokt-network/tendermint v0.32.11-0.20220824215059-3214a152d8d4
-replace github.com/tendermint/tendermint => /go/src/github.com/pokt-network/tendermint
+replace github.com/tendermint/tendermint => github.com/pokt-network/tendermint v0.32.11-0.20220824215059-3214a152d8d4
 
 require (
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d
