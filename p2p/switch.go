@@ -362,6 +362,10 @@ func (sw *Switch) stopAndRemovePeer(peer Peer, reason interface{}) {
 	// https://github.com/tendermint/tendermint/issues/3338
 	if sw.peers.Remove(peer) {
 		sw.metrics.Peers.Add(float64(-1))
+	} else {
+		// Removal of the peer has failed. The function above sets a flag within the peer to mark this.
+		// We keep this message here as information to the developer.
+		sw.Logger.Debug("error on peer removal", ",", "peer", peer.ID())
 	}
 }
 
@@ -371,8 +375,8 @@ func (sw *Switch) stopAndRemovePeer(peer Peer, reason interface{}) {
 // to the PEX/Addrbook to find the peer with the addr again
 // NOTE: this will keep trying even if the handshake or auth fails.
 // TODO: be more explicit with error types so we only retry on certain failures
-//  - ie. if we're getting ErrDuplicatePeer we can stop
-//  	because the addrbook got us the peer back already
+//   - ie. if we're getting ErrDuplicatePeer we can stop
+//     because the addrbook got us the peer back already
 func (sw *Switch) reconnectToPeer(addr *NetAddress) {
 	if sw.reconnecting.Has(string(addr.ID)) {
 		return
@@ -801,6 +805,12 @@ func (sw *Switch) addPeer(p Peer) error {
 	// so that if Receive errors, we will find the peer and remove it.
 	// Add should not err since we already checked peers.Has().
 	if err := sw.peers.Add(p); err != nil {
+		switch err.(type) {
+		case ErrPeerRemoval:
+			sw.Logger.Error("Error starting peer ",
+				" err ", "Peer has already errored and removal was attempted.",
+				"peer", p.ID())
+		}
 		return err
 	}
 	sw.metrics.Peers.Add(float64(1))

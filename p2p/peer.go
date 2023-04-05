@@ -37,6 +37,9 @@ type Peer interface {
 
 	Set(string, interface{})
 	Get(string) interface{}
+
+	SetRemovalFailed()
+	GetRemovalFailed() bool
 }
 
 //----------------------------------------------------------
@@ -115,9 +118,20 @@ type peer struct {
 
 	metrics       *Metrics
 	metricsTicker *time.Ticker
+
+	// When removal of a peer fails, we set this flag
+	removalAttemptFailed bool
 }
 
 type PeerOption func(*peer)
+
+func (p *peer) SetRemovalFailed() {
+	p.removalAttemptFailed = true
+}
+
+func (p *peer) GetRemovalFailed() bool {
+	return p.removalAttemptFailed
+}
 
 func newPeer(
 	pc peerConn,
