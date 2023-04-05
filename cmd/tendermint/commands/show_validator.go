@@ -25,10 +25,14 @@ func showValidator(cmd *cobra.Command, args []string) error {
 
 	pv := privval.LoadFilePVLean(keyFilePath, config.PrivValidatorStateFile())
 
-	pubKey, err := pv.GetPubKey()
+	pubKeys, err := pv.GetPubKeys()
 	if err != nil {
 		return errors.Wrap(err, "can't get pubkey")
 	}
+	if len(pubKeys) > 1 {
+		return errors.Wrapf(err, "expected exactly one public key but got %d", len(pubKeys))
+	}
+	pubKey := pubKeys[0]
 
 	bz, err := cdc.MarshalJSON(pubKey)
 	if err != nil {

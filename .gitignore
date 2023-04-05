@@ -46,3 +46,5 @@ terraform.tfstate.d
 .vscode
 
 profile\.out
+
+main

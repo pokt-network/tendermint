@@ -1,6 +1,9 @@
 module github.com/pokt-network/tendermint
 
-go 1.17
+go 1.18
+
+// TODO: Update the main revision after changes are merged
+replace github.com/tendermint/tendermint => github.com/pokt-network/tendermint main
 
 require (
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d
@@ -26,6 +29,7 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/tendermint/go-amino v0.15.1
+	github.com/tendermint/tendermint v0.0.0-00010101000000-000000000000
 	github.com/tendermint/tm-db v0.5.1
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974
