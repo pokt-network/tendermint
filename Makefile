@@ -78,7 +78,7 @@ proto-check-breaking:
 .PHONY: proto-check-breaking
 
 proto-check-breaking-ci:
-	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=testingv33.7
+	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=testingv33.8
 .PHONY: proto-check-breaking-ci
 
 ###############################################################################
