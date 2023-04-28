@@ -384,7 +384,7 @@ func (fsm *BcReactorFSM) Handle(msg *bcReactorMessage) error {
 	}
 	next, err := fsm.state.handle(fsm, msg.event, msg.data)
 	if err != nil {
-		fsm.logger.Error("FSM event handler returned", "err", err,
+		fsm.logger.Error("OLSH FSM event handler returned", "err", err,
 			"state", fsm.state, "event", msg.event)
 	}
 

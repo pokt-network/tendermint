@@ -2,8 +2,9 @@ package state
 
 import (
 	"fmt"
-	"github.com/tendermint/tendermint/state/txindex"
 	"time"
+
+	"github.com/tendermint/tendermint/state/txindex"
 
 	dbm "github.com/tendermint/tm-db"
 
@@ -99,7 +100,6 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 	state State, commit *types.Commit,
 	proposerAddr []byte,
 ) (*types.Block, *types.PartSet) {
-
 	maxBytes := state.ConsensusParams.Block.MaxBytes
 	maxGas := state.ConsensusParams.Block.MaxGas
 
@@ -110,6 +110,7 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 	// Fetch a limited amount of valid txs
 	maxDataBytes := types.MaxDataBytes(maxBytes, state.Validators.Size(), len(evidence))
 	txs := blockExec.mempool.ReapMaxBytesMaxGas(maxDataBytes, maxGas)
+	fmt.Println("OLSH maxDataBytes", maxDataBytes)
 
 	return state.MakeBlock(height, txs, commit, evidence, proposerAddr)
 }
