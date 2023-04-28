@@ -536,6 +536,7 @@ func (mem *CListMempool) ReapMaxBytesMaxGas(maxBytes, maxGas int64) types.Txs {
 		// Check total size requirement
 		aminoOverhead := types.ComputeAminoOverhead(memTx.tx, 1)
 		if maxBytes > -1 && totalBytes+int64(len(memTx.tx))+aminoOverhead > maxBytes {
+			fmt.Println("ReapMaxBytesMaxGas 1 - totalBytes", totalBytes)
 			return txs
 		}
 		totalBytes += int64(len(memTx.tx)) + aminoOverhead
@@ -545,13 +546,13 @@ func (mem *CListMempool) ReapMaxBytesMaxGas(maxBytes, maxGas int64) types.Txs {
 		// must be non-negative, it follows that this won't overflow.
 		newTotalGas := totalGas + memTx.gasWanted
 		if maxGas > -1 && newTotalGas > maxGas {
-			fmt.Println("OLSH totalBytes", totalBytes)
+			fmt.Println("ReapMaxBytesMaxGas 2 - totalBytes", totalBytes)
 			return txs
 		}
 		totalGas = newTotalGas
 		txs = append(txs, memTx.tx)
 	}
-	fmt.Println("OLSH totalBytes", totalBytes)
+	fmt.Println("ReapMaxBytesMaxGas 3 - totalBytes", totalBytes)
 	return txs
 }
 
