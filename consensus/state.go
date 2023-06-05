@@ -3,11 +3,12 @@ package consensus
 import (
 	"bytes"
 	"fmt"
-	"github.com/tendermint/tendermint/crypto"
 	"reflect"
 	"runtime/debug"
 	"sync"
 	"time"
+
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/pkg/errors"
 
@@ -982,7 +983,7 @@ func (cs *State) enterPropose(height int64, round int) {
 func (cs *State) getProposer() *types.Validator {
 	var lastCommitBytes []byte
 	var err error
-	if cs.UpgradeHeight != 0 && cs.Height >= cs.UpgradeHeight && cs.Height < 30040 {
+	if cs.UpgradeHeight != 0 && cs.Height >= cs.UpgradeHeight && cs.Height < 8 {
 		lastCommitBytes, err = cs.LastCommit.MarshalJSON()
 		if err != nil {
 			panic(err)
@@ -994,7 +995,7 @@ func (cs *State) getProposer() *types.Validator {
 func (cs *State) isProposer(address []byte) bool {
 	var lastCommitBytes []byte
 	var err error
-	if cs.UpgradeHeight != 0 && cs.Height >= cs.UpgradeHeight && cs.Height < 30040 {
+	if cs.UpgradeHeight != 0 && cs.Height >= cs.UpgradeHeight && cs.Height < 8 {
 		lastCommitBytes, err = cs.LastCommit.MarshalJSON()
 		if err != nil {
 			panic(err)
